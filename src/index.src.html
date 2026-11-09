@@ -1,0 +1,1408 @@
+<meta charset="utf-8">
+<title>The WorkCell by Frame Innovations</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap">
+<style>
+
+/* Fixed full-bleed 3D stage for the machine story (hero + 5 chapters, then a pull-back and fade).
+   Everything after it sits on a plain dark page. One content grid: 1200px max, shared gutters. Dark only. */
+:root{
+  --bg:#09090B; --bg-rgb:9,9,11; --surface:#111114; --surface-rgb:17,17,20; --raise:#17181C;
+  --line-1:#222328; --line-2:#2E3036; --muted:#8B8F99; --soft:#A9ADB6; --text:#ECEDE6;
+  --accent:#2CDB1A; --on-accent:#09090B; --accent-wash:#13241A; --accent-ring:rgba(44,219,26,.22);
+  --idle:#1c1d22; --chart-man:#7E838D; --shadow:rgba(0,0,0,.5);
+  --gut:clamp(24px,5vw,96px); --max:1200px;
+  --display:'Geist', 'Helvetica Neue', Arial, sans-serif; --mono:'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--text);font-family:var(--display);font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+/* faint dot grid behind the machine; drifts slightly with the story */
+.dots{position:fixed;inset:-40px 0;z-index:0;pointer-events:none;background-image:radial-gradient(circle, rgba(236,237,230,.16) 1px, transparent 1.4px);background-size:26px 26px;-webkit-mask-image:radial-gradient(ellipse 75% 70% at 50% 50%, #000 30%, transparent 100%);mask-image:radial-gradient(ellipse 75% 70% at 50% 50%, #000 30%, transparent 100%);will-change:transform}
+.dots.hot{opacity:0;background-image:radial-gradient(circle, rgba(44,219,26,.75) 1.1px, transparent 1.7px);-webkit-mask-image:radial-gradient(circle 170px at var(--mx,-999px) var(--my,-999px), #000 0%, rgba(0,0,0,.4) 45%, transparent 100%);mask-image:radial-gradient(circle 170px at var(--mx,-999px) var(--my,-999px), #000 0%, rgba(0,0,0,.4) 45%, transparent 100%)}
+/* spotlight: darkens everything except the part being talked about */
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.eyebrow{color:var(--soft);display:inline-flex;gap:10px;align-items:center}
+.eyebrow b{color:var(--accent);font-weight:500}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.eyebrow.num::before{display:none}
+h2{text-wrap:balance;font-weight:500;letter-spacing:-.03em}
+.inner{width:100%;max-width:var(--max);margin:0 auto}
+.wrap{padding-left:max(var(--gut), env(safe-area-inset-left,0px));padding-right:max(var(--gut), env(safe-area-inset-right,0px))}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* top bar */
+.bar{position:fixed;top:0;left:0;right:0;z-index:8;transition:background-color .3s, border-color .3s;border-bottom:1px solid transparent;background:linear-gradient(180deg, rgba(var(--bg-rgb),.72), rgba(var(--bg-rgb),0))}
+.bar .inner{display:flex;align-items:center;gap:14px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:16px}
+.bar.scrolled{background:rgba(var(--bg-rgb),.8);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom-color:var(--line-1)}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none}
+.brand svg{width:22px;height:22px}
+.bar .spacer{flex:1}
+.cta{font:600 14px/1 var(--display);color:var(--on-accent);background:var(--accent);border:0;border-radius:999px;padding:12px 18px;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:filter .2s, transform .2s}
+.cta:hover{filter:brightness(1.08)}
+.cta,.brand .label{white-space:nowrap}
+.cta-short{display:none}
+@media (max-width:420px){ .bar .cta-long{display:none} .bar .cta-short{display:inline} }
+.cta:active{transform:scale(.98)}
+
+/* chapter ticks */
+.ticks{position:fixed;left:max(24px, env(safe-area-inset-left,0px));top:50%;transform:translateY(-50%);z-index:6;opacity:0;display:flex;flex-direction:column;gap:22px;pointer-events:none}
+.ticks.live{pointer-events:auto}
+.ticks::before{content:"";position:absolute;left:3px;top:4px;bottom:4px;width:1px;background:var(--line-2)}
+.ticks .fillbar{position:absolute;left:3px;top:4px;width:1px;height:0;background:var(--accent)}
+.ticks a{position:relative;display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--muted)}
+.ticks i{width:7px;height:7px;border-radius:50%;background:var(--bg);border:1px solid var(--line-2);transition:background .3s, border-color .3s, transform .3s}
+.ticks a.done i{background:var(--accent);border-color:var(--accent)}
+.ticks a.on i{transform:scale(1.45)}
+.ticks span{font-size:12px;opacity:0;transform:translateX(-4px);transition:opacity .25s, transform .25s;white-space:nowrap;background:rgba(var(--bg-rgb),.9);padding:2px 8px;border-radius:4px}
+.ticks a:hover span,.ticks a:focus-visible span,.ticks a.on span{opacity:1;transform:none}
+.ticks a.on{color:var(--text)}
+
+main{position:relative;z-index:4}
+
+/* hero */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding-top:calc(88px + env(safe-area-inset-top,0px));padding-bottom:72px}
+.hero .copy{width:min(44vw,560px);display:flex;flex-direction:column;gap:36px;will-change:opacity,transform}
+.hero .title{display:flex;flex-direction:column;gap:18px}
+.hero .mark{width:44px;height:44px;color:var(--accent)}
+.hero .name{display:flex;flex-direction:column;gap:6px}
+.hero h1{font-size:clamp(48px,5.6vw,96px);font-weight:600;letter-spacing:-.045em;line-height:.95}
+.hero .by{font-size:clamp(18px,1.6vw,23px);font-weight:400;color:var(--muted);letter-spacing:-.01em}
+.hero .tag{font-size:clamp(20px,1.9vw,27px);font-weight:500;color:var(--accent);letter-spacing:-.02em}
+.stats{display:grid;grid-template-columns:repeat(4,auto);justify-content:start;gap:12px 40px;padding-top:22px;border-top:1px solid var(--line-1)}
+.stats div{display:flex;flex-direction:column;gap:6px}
+.stats strong{font-size:clamp(24px,2.2vw,32px);font-weight:600;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.stats span{font-size:13px;color:var(--muted)}
+.badges{display:flex;flex-wrap:nowrap;gap:8px}
+.badge{white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:999px;padding:7px 12px;font-size:13px;color:var(--muted)}
+.badge b{color:var(--text);font-weight:500}
+.scrollcue{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.scrollcue i{width:1px;height:28px;background:linear-gradient(var(--muted),transparent);animation:cue 1.8s ease-in-out infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+.rise{opacity:0;transform:translateY(14px);animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i,0) * 90ms + 80ms)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* machine chapters: tall scroll spacers; their caption cards are fixed and fade in and out with the story */
+.ch{min-height:140vh}
+.ch.short{min-height:105vh}
+.ch.long{min-height:150vh}
+.panel{position:fixed;top:50%;width:400px;z-index:5;display:flex;flex-direction:column;gap:16px;padding:28px;background:rgba(var(--surface-rgb),.94);border:1px solid var(--line-1);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.45);opacity:0;visibility:hidden;transform:translateY(-50%);will-change:opacity,transform}
+.panel.r{right:max(var(--gut), calc((100vw - var(--max)) / 2))}
+.panel.l{left:max(var(--gut), calc((100vw - var(--max)) / 2))}
+.panel h2{font-size:clamp(28px,2.7vw,38px);line-height:1.08}
+.panel p{color:var(--soft);font-size:16px}
+.specs{display:grid;grid-template-columns:auto 1fr;column-gap:20px;border-top:1px solid var(--line-1)}
+.specs dt,.specs dd{padding:9px 0;border-bottom:1px solid var(--line-1);font-size:14px}
+.specs dt{color:var(--muted)}
+
+/* full-width sections */
+.sec{position:relative;padding-block:14vh}
+.sec .head{margin-bottom:44px;display:flex;flex-direction:column;gap:16px}
+.sec .head h2{font-size:clamp(34px,4.2vw,56px);line-height:1.04;max-width:20ch}
+.sec .head p{color:var(--soft);max-width:60ch}
+
+/* app flow (looping demo) */
+.flow .grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:56px;align-items:center}
+.steps{display:flex;flex-direction:column}
+.steps h2{font-size:clamp(30px,3vw,42px);line-height:1.06;margin:0 0 26px}
+.step{position:relative;display:flex;flex-direction:column;gap:4px;padding:14px 0 14px 22px;color:var(--muted);transition:color .35s}
+.step::before{content:"";position:absolute;left:0;top:16px;bottom:16px;width:2px;border-radius:1px;background:var(--line-1)}
+.step .track{position:absolute;left:0;top:16px;width:2px;border-radius:1px;background:var(--accent);height:0}
+.step strong{font-weight:500;font-size:17px;display:flex;gap:10px;align-items:baseline}
+.step strong small{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--muted)}
+.step .d{font-size:14px;color:var(--muted);opacity:.7;transition:opacity .35s, color .35s}
+.step.on{color:var(--text)} .step.on .d{opacity:1;color:var(--soft)} .step.on strong small{color:var(--accent)}
+.app{position:relative;background:var(--surface);border:1px solid var(--line-2);border-radius:16px;overflow:hidden;box-shadow:0 40px 120px var(--shadow)}
+.app .chrome{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line-1);background:var(--raise)}
+.app .chrome i{width:10px;height:10px;border-radius:50%;background:var(--line-2)}
+.app .chrome .url{margin-left:12px;flex:1;max-width:340px;font-size:12px;color:var(--muted);background:var(--bg);border-radius:6px;padding:5px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app .body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;padding:16px}
+.app .col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--bg);border:1px solid var(--line-1);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;transition:border-color .35s, box-shadow .35s}
+.card.hot{border-color:rgba(44,219,26,.7);box-shadow:0 0 0 3px var(--accent-ring)}
+.card h3{font-size:13px;color:var(--muted);font-weight:500;display:flex;justify-content:space-between;gap:8px}
+.card h3 span:last-child{font-variant-numeric:tabular-nums}
+.drop{position:relative;border:1.5px dashed var(--line-2);border-radius:10px;height:112px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;overflow:hidden}
+.file{position:absolute;left:0;top:0;display:flex;align-items:center;gap:8px;background:var(--raise);border:1px solid var(--line-2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);box-shadow:0 10px 30px var(--shadow);will-change:transform}
+.file svg{width:16px;height:16px;color:var(--accent)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:13px}
+.opts span:nth-child(odd){color:var(--muted)}
+.meter{height:6px;background:var(--line-1);border-radius:3px;overflow:hidden}
+.meter.lg{height:8px;border-radius:4px}
+.meter i{display:block;height:100%;width:0;background:var(--accent);border-radius:inherit}
+.q{display:flex;flex-direction:column;gap:6px}
+.q div{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:8px 10px;border-radius:8px;background:var(--surface);transition:background .3s, transform .4s, opacity .4s}
+.q div span:last-child{color:var(--muted);font-variant-numeric:tabular-nums}
+.q div.mine{background:var(--accent-wash)}
+.pstat{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.pstat b{color:var(--text);font-weight:500;font-variant-numeric:tabular-nums}
+.toast{position:absolute;right:16px;top:58px;width:min(330px,calc(100% - 32px));background:var(--raise);border:1px solid var(--line-2);border-radius:14px;padding:14px 16px;display:flex;gap:12px;box-shadow:0 24px 60px rgba(0,0,0,.6);transform:translateY(-12px) scale(.98);opacity:0;transition:transform .5s cubic-bezier(.2,.8,.2,1), opacity .35s;pointer-events:none}
+.toast.on{transform:none;opacity:1}
+.toast .av{width:34px;height:34px;flex:none;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.toast .av svg{width:22px;height:22px}
+.toast p{font-size:13px;color:var(--soft);margin-top:2px}
+.toast b{color:var(--text);font-weight:500}
+.toast .who{font-size:12px;color:var(--muted)}
+.appnote{margin-top:12px;font-size:12px;color:var(--muted)}
+
+/* numbers */
+.nums .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line-1);border:1px solid var(--line-1);border-radius:20px;overflow:hidden}
+.nums .cell{background:var(--surface);padding:34px 32px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.nums strong{font-size:clamp(42px,5vw,72px);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.nums span{font-size:15px;color:var(--soft)}
+
+/* video + recognition */
+.player{position:relative;aspect-ratio:16/9;width:100%;border-radius:18px;overflow:hidden;border:1px solid var(--line-2);background:var(--poster, none) center/cover no-repeat, radial-gradient(ellipse at 65% 40%, #18201a 0%, var(--surface) 65%);color:#fff}
+.player img.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.player::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg, rgba(9,9,11,.92) 0%, rgba(9,9,11,.55) 34%, rgba(9,9,11,0) 58%);pointer-events:none}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:3}
+.player .cap{position:absolute;left:clamp(24px,5.5%,72px);top:50%;transform:translateY(-50%);z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:14px;max-width:38%}
+.player .cap .k{font-size:13px;color:rgba(255,255,255,.66)}
+.player .cap strong{font-size:clamp(24px,2.8vw,40px);font-weight:500;letter-spacing:-.03em;line-height:1.06;text-wrap:balance}
+.player .play{margin-top:10px;display:inline-flex;align-items:center;gap:12px;padding:8px 20px 8px 8px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;font:500 15px/1 var(--display);cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:background .25s}
+.player .play:hover{background:rgba(255,255,255,.18)}
+.player .play i{width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.player .play svg{width:18px;height:18px;margin-left:3px}
+.vidalt{margin-top:12px;font-size:13px;color:var(--muted)}
+.vidalt a{color:var(--soft)}
+.player.blocked .play{opacity:.35;pointer-events:none}
+.awards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;margin-top:36px;padding-top:28px;border-top:1px solid var(--line-1)}
+.award{display:flex;align-items:flex-start;gap:16px}
+.award .ico{width:40px;height:40px;flex:none;border-radius:11px;border:1px solid var(--line-2);display:grid;place-items:center;color:var(--accent)}
+.award .ico svg{width:20px;height:20px}
+.award > div:last-child{display:flex;flex-direction:column;gap:4px;min-width:0;padding-top:1px}
+.award strong{font-size:16px;font-weight:500;line-height:1.3}
+.award span{font-size:14px;color:var(--muted)}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:340px minmax(0,1fr);gap:20px;align-items:stretch}
+.panelbox{background:var(--surface);border:1px solid var(--line-1);border-radius:18px;padding:26px}
+.controls{display:flex;flex-direction:column;gap:26px}
+.presets{display:flex;flex-direction:column;gap:10px}
+.presets > span{font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 13px/1 var(--display);color:var(--soft);background:transparent;border:1px solid var(--line-2);border-radius:999px;padding:9px 13px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.chip:hover{color:var(--text);border-color:var(--muted)}
+.chip[aria-pressed=true]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.field .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.field label{font-size:14px;color:var(--soft)}
+.field output{font-size:22px;font-weight:600;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums;text-align:right}
+.field output small{font-size:13px;font-weight:400;color:var(--muted);margin-left:2px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent) 0 var(--fill,50%),var(--line-2) var(--fill,50%) 100%);cursor:pointer;margin:10px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--text);border:0;box-shadow:0 0 0 5px var(--accent-ring),0 2px 8px var(--shadow)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--text);border:0;box-shadow:0 0 0 5px var(--accent-ring)}
+input[type=range]:focus-visible{outline:none}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 6px var(--accent)}
+.result{display:flex;flex-direction:column;gap:26px;min-width:0}
+.headline{font-size:clamp(22px,2.2vw,30px);font-weight:500;letter-spacing:-.02em;line-height:1.25;max-width:32ch;text-wrap:balance}
+.headline em{font-style:normal;color:var(--accent)}
+.headline span,.headline em{font-variant-numeric:tabular-nums}
+.week{display:flex;flex-direction:column;gap:8px}
+.week .row{display:grid;grid-template-columns:104px minmax(0,1fr) 48px;gap:14px;align-items:center}
+.week .row > span{font-size:14px;color:var(--soft)}
+.week .row b{font-weight:500;font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
+.week svg{width:100%;height:28px;display:block;border-radius:6px;overflow:hidden}
+.week svg .bg{fill:var(--idle)}
+.week svg.man .run{fill:var(--chart-man)}
+.week svg.wc .run{fill:var(--accent)}
+.week svg .day{fill:rgba(236,237,230,.07)}
+.week .labrow svg{height:4px;border-radius:2px}
+.week svg.lab .run{fill:var(--soft)}
+.week svg.lab .day{display:none}
+.week svg.lab .bg{fill:transparent}
+.week .labrow > span{font-size:12px;color:var(--muted)}
+.week .labrow{margin-bottom:-2px}
+.week .days{display:grid;grid-template-columns:repeat(7,1fr);margin-left:118px;margin-right:62px;font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin:6px 0 0 118px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;border-top:1px solid var(--line-1);padding-top:22px;margin-top:auto}
+.kpis div{display:flex;flex-direction:column;gap:6px}
+.kpis strong{font-size:clamp(30px,3.2vw,44px);font-weight:600;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.kpis span{font-size:13px;color:var(--muted)}
+.kpis .good strong{color:var(--accent)}
+details.assume{grid-column:1/-1;font-size:14px;color:var(--muted)}
+details.assume summary{cursor:pointer;list-style:none;display:inline-flex;gap:8px;align-items:center;color:var(--soft)}
+details.assume summary::-webkit-details-marker{display:none}
+details.assume summary::before{content:"+";display:inline-grid;place-items:center;width:18px;height:18px;border:1px solid var(--line-2);border-radius:50%;font-size:13px;line-height:1}
+details.assume[open] summary::before{content:"−"}
+details.assume p{margin-top:12px;max-width:90ch;line-height:1.6}
+
+/* comparison */
+.tablewrap{overflow-x:auto;border:1px solid var(--line-1);border-radius:18px;background:var(--surface)}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:880px;font-size:14px}
+th,td{padding:15px 16px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line-1)}
+tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
+thead th{font-weight:500;font-size:15px;color:var(--text);background:var(--raise)}
+thead th small{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:3px}
+tbody th{font-size:14px;color:var(--muted);font-weight:400;width:168px}
+td{color:var(--soft)}
+td.us,th.us{background:var(--accent-wash);color:var(--text)}
+thead th.us{color:var(--accent)}
+td.us .ck{display:inline-flex;gap:8px;align-items:flex-start}
+td.us .ck svg{width:16px;height:16px;flex:none;margin-top:2px;color:var(--accent)}
+td .no{color:var(--muted)}
+tr.yours th, tr.yours td{border-top:1px solid var(--line-2)}
+tr.yours td b{font-weight:500;color:var(--text);font-variant-numeric:tabular-nums}
+tr.yours td.us b{color:var(--accent)}
+tr.yours td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.srcs{margin-top:14px;font-size:12px;color:var(--muted)}
+.srcs a{color:var(--soft)}
+
+/* waitlist */
+.wait{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:start}
+.wait .pitch{display:flex;flex-direction:column;gap:18px}
+.wait .pitch h2{font-size:clamp(34px,4.2vw,56px);line-height:1.04}
+.wait .pitch p{color:var(--soft);max-width:46ch}
+.wait ul{list-style:none;display:flex;flex-direction:column;gap:10px;color:var(--soft);font-size:15px}
+.wait li{display:flex;gap:12px;align-items:baseline}
+.wait li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--accent);transform:translateY(-2px)}
+.wait form{background:var(--surface);border:1px solid var(--line-1);border-radius:18px;padding:28px;display:flex;flex-direction:column;gap:16px}
+.wait label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.wait input,.wait select,.wait textarea{font:15px/1.4 var(--display);color:var(--text);background:var(--bg);border:1px solid var(--line-2);border-radius:10px;padding:11px 12px;transition:border-color .2s, box-shadow .2s}
+.wait input:focus,.wait select:focus,.wait textarea:focus{outline:none;border-color:rgba(44,219,26,.7);box-shadow:0 0 0 3px var(--accent-ring)}
+.wait textarea{min-height:76px;resize:vertical}
+.wait input,.wait select,.wait textarea{width:100%;min-width:0}
+.wait label{min-width:0}
+.wait .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wait .note{font-size:13px;color:var(--muted)}
+.wait .note a{color:var(--soft);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
+.wait .note a:hover{color:var(--text)}
+.cta:disabled{opacity:.6;cursor:wait}
+.hp{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0}
+.wait .note.ok{color:var(--accent)}
+
+/* bracket motif: the logo's corner brackets frame whatever is hovered */
+.brk{position:relative}
+.brk::before{content:"";position:absolute;inset:var(--bi,-7px);pointer-events:none;z-index:4;opacity:0;transform:scale(1.04);transition:opacity .25s ease, transform .35s cubic-bezier(.2,.8,.2,1);
+  --c:var(--bc,var(--accent)); --l:var(--bl,12px); --w:1.5px;
+  background:linear-gradient(var(--c),var(--c)) top left/var(--l) var(--w) no-repeat,linear-gradient(var(--c),var(--c)) top left/var(--w) var(--l) no-repeat,
+    linear-gradient(var(--c),var(--c)) top right/var(--l) var(--w) no-repeat,linear-gradient(var(--c),var(--c)) top right/var(--w) var(--l) no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom left/var(--l) var(--w) no-repeat,linear-gradient(var(--c),var(--c)) bottom left/var(--w) var(--l) no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom right/var(--l) var(--w) no-repeat,linear-gradient(var(--c),var(--c)) bottom right/var(--w) var(--l) no-repeat}
+.brk:hover::before,.brk:focus-visible::before,.brk:focus-within::before{opacity:1;transform:none}
+.cta.brk{--bc:var(--text);--bi:-6px;--bl:9px}
+.nums .cell.brk{--bi:12px}
+@media (hover:none){ .brk::before{display:none} }
+
+/* reveal: headings and cards fade up as they scroll in */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease, transform 1s cubic-bezier(.16,.84,.24,1);transition-delay:var(--d,0ms)}
+.reveal.in{opacity:1;transform:none}
+
+/* footer */
+footer{padding:36px 0 44px;border-top:1px solid var(--line-1)}
+.foot{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.foot .brand svg{width:20px;height:20px}
+.flinks{display:flex;gap:24px;margin-left:auto}
+.flinks a{font-size:14px;color:var(--muted);text-decoration:none;transition:color .2s}
+.flinks a:hover{color:var(--text)}
+.fcopy{font-size:13px;color:var(--muted)}
+
+/* loader */
+.loader{position:fixed;right:max(24px, env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:6;color:var(--muted);font-size:12px;display:flex;gap:10px;align-items:center;transition:opacity .4s}
+.loader.gone{opacity:0;pointer-events:none}
+.loader i{width:110px;height:2px;background:var(--line-1);position:relative;overflow:hidden;display:block;border-radius:1px}
+.loader i::after{content:"";position:absolute;inset:0;width:var(--p,0%);background:var(--accent);transition:width .2s}
+
+@media (max-width:1099px){ .ticks{display:none} }
+@media (max-width:980px){
+  .flow .grid{grid-template-columns:1fr;gap:28px}
+  .calc{grid-template-columns:1fr}
+  .wait{grid-template-columns:1fr}
+  .awards{grid-template-columns:1fr;gap:18px}
+  .stats{grid-template-columns:repeat(2,auto)}
+}
+@media (max-width:760px){
+  body{font-size:16px}
+  .bar{background:rgba(var(--bg-rgb),.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom-color:var(--line-1)}
+  .bar .inner{padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:12px}
+  .cta{padding:10px 14px;font-size:13px}
+  .brand .label{font-size:11px;letter-spacing:.08em}
+  .hero{align-items:flex-start;padding-top:calc(96px + env(safe-area-inset-top,0px))}
+  .hero .copy{width:100%;gap:22px}
+  .hero .title{gap:12px}
+  .hero .mark{width:34px;height:34px}
+  .hero h1{font-size:clamp(40px,12vw,56px)}
+  .stats{grid-template-columns:repeat(4,auto);gap:8px 18px;padding-top:16px}
+  .stats strong{font-size:21px} .stats span{font-size:11px}
+  .badges{display:none}
+  .scrollcue{display:none}
+  .ch{min-height:120vh} .ch.short{min-height:95vh} .ch.long{min-height:130vh}
+  .panel,.panel.r,.panel.l{left:12px;right:12px;width:auto;top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:none;padding:18px 20px;gap:10px}
+  .panel h2{font-size:24px}
+  .panel p{font-size:14px}
+  .specs dt,.specs dd{padding:6px 0;font-size:13px}
+  .sec{padding-block:10vh}
+  .sec .head{margin-bottom:28px}
+  .steps h2{font-size:28px;margin:0 0 10px}
+  .step{padding:10px 0 10px 18px}
+  .step .d{display:none}
+  .app .body{grid-template-columns:1fr}
+  .app .card:not(.hot){display:none}
+  .toast{top:auto;bottom:16px}
+  .player .cap{top:auto;bottom:16px;transform:none;left:16px;max-width:70%;gap:8px}
+  .player .cap strong{font-size:18px}
+  .player .play{padding:5px 14px 5px 5px;font-size:13px;margin-top:2px} .player .play i{width:32px;height:32px}
+  .player::after{background:linear-gradient(0deg, rgba(9,9,11,.85), rgba(9,9,11,0) 70%)}
+  .nums .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nums .cell{padding:22px 20px}
+  .nums strong{font-size:40px}
+  .nums span{font-size:14px}
+  .panelbox{padding:20px}
+  .week .row{grid-template-columns:72px minmax(0,1fr) 40px;gap:10px}
+  .week .row > span{font-size:12px}
+  .week .days{margin-left:82px;margin-right:50px;font-size:10px}
+  .legend{margin-left:0;gap:10px;font-size:12px}
+  .kpis strong{font-size:28px}
+  tbody th, thead th:first-child{position:sticky;left:0;z-index:1;background:var(--surface);width:124px;min-width:124px}
+  thead th:first-child{background:var(--raise)}
+  tbody th{box-shadow:1px 0 0 var(--line-1)}
+  .wait .two{grid-template-columns:1fr}
+  .wait form{padding:20px}
+  .foot{flex-direction:column;align-items:flex-start;gap:18px}
+  .flinks{margin-left:0;flex-wrap:wrap;gap:16px}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} .rise{opacity:1;transform:none} }
+
+/* ---------- v18: sales-first layout ---------- */
+.stage-host{position:absolute;inset:0;overflow:hidden}
+.stage-host canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .22s ease}
+#heroStage{z-index:0}
+.hero .inner{position:relative;z-index:1}
+.hero .copy{gap:30px}
+.hero-ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.hero-ctas .cta{padding:14px 22px;font-size:15px}
+.ghost{display:inline-flex;align-items:center;gap:10px;padding:8px 18px 8px 8px;border-radius:999px;border:1px solid var(--line-2);color:var(--text);text-decoration:none;font:500 15px/1 var(--display);transition:background .2s,border-color .2s;background:rgba(var(--surface-rgb),.5)}
+.ghost:hover{background:var(--raise);border-color:var(--muted)}
+.ghost i{width:32px;height:32px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center}
+.ghost svg{width:13px;height:13px;margin-left:2px}
+.proof{display:flex;flex-direction:column;gap:12px}
+.proof p{font-size:14px;color:var(--muted)}
+.proof p b{color:var(--text);font-weight:500}
+.stats div span{white-space:nowrap}
+
+/* why: bento */
+.wgrid{display:grid;gap:16px}
+.tile{position:relative;background:var(--surface);border:1px solid var(--line-1);border-radius:18px;display:flex;flex-direction:column;min-width:0}
+.tile .img{position:relative;aspect-ratio:16/10;border-radius:17px 17px 0 0;overflow:hidden;background:#111114 center/cover no-repeat}
+.tile .img::after{content:"";position:absolute;inset:auto 0 0 0;height:40%;background:linear-gradient(0deg,var(--surface),rgba(17,17,20,0));pointer-events:none}
+.tile .txt{padding:6px 24px 26px;display:flex;flex-direction:column;gap:8px}
+.tile strong{font-size:clamp(34px,3.4vw,48px);color:var(--accent);font-weight:600;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums}
+.tile h3{font-size:18px;font-weight:500;letter-spacing:-.01em}
+.tile p{font-size:14px;color:var(--muted);line-height:1.5}
+.tile.brk{--bi:-7px}
+/* the web-app tile shows a tiny dashboard instead of a render */
+.appmock{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%, #18191e, #111114 70%)!important}
+.appmock .am{width:min(88%,380px);display:flex;flex-direction:column;gap:7px;font-size:11.5px;color:var(--soft);transform:translateY(-4%)}
+.am-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px}
+.am-stats div{background:var(--bg);border:1px solid var(--line-1);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.am-stats b{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.02em}
+.am-stats span{font-size:10.5px;color:var(--muted)}
+.am-p,.am-q{display:grid;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line-1);border-radius:8px;padding:7px 10px}
+.am-p{grid-template-columns:96px 1fr 34px}
+.am-p > i{height:5px;border-radius:3px;background:var(--line-1);overflow:hidden;display:block}
+.am-p > i > i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.am-p em,.am-q em{font-style:normal;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.am-q{grid-template-columns:1fr auto}
+.am-q em.g{color:var(--accent)}
+
+.wgrid.l-bento{grid-template-columns:repeat(4,minmax(0,1fr))}
+.l-bento .tile[data-k=night]{grid-column:span 2;grid-row:span 2}
+.l-bento .tile[data-k=night] .img{aspect-ratio:auto;flex:1;min-height:300px}
+.l-bento .tile[data-k=night] strong{font-size:clamp(48px,5vw,72px)}
+.l-bento .tile[data-k=swap],.l-bento .tile[data-k=app],.l-bento .tile[data-k=foot]{grid-column:span 2;flex-direction:row}
+.l-bento .tile[data-k=swap] .img,.l-bento .tile[data-k=app] .img,.l-bento .tile[data-k=foot] .img{width:48%;flex:none;aspect-ratio:auto;min-height:220px;border-radius:17px 0 0 17px}
+.l-bento .tile[data-k=swap] .img::after,.l-bento .tile[data-k=app] .img::after,.l-bento .tile[data-k=foot] .img::after{inset:0 0 0 auto;width:35%;height:auto;background:linear-gradient(270deg,var(--surface),rgba(17,17,20,0))}
+.l-bento .tile[data-k=swap] .txt,.l-bento .tile[data-k=app] .txt,.l-bento .tile[data-k=foot] .txt{justify-content:center;padding:24px 26px 24px 8px}
+.l-bento .tile[data-k=app] .img{padding-left:18px;justify-content:flex-start}
+.l-bento .tile[data-k=app] .am{transform:scale(.8);transform-origin:left center;width:330px;flex:none}
+.l-bento .tile[data-k=price] .minitoast,.l-bento .tile[data-k=store] .minitoast{font-size:10.5px}
+
+
+.minitoast{position:absolute;right:12px;bottom:14px;z-index:2;display:flex;gap:8px;align-items:center;background:rgba(23,24,28,.92);border:1px solid var(--line-2);border-radius:10px;padding:7px 10px;font-size:11.5px;color:var(--soft);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.minitoast i{width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
+.minitoast i svg{width:12px;height:12px}
+.minitoast b{color:var(--text);font-weight:500}
+.dimchip{left:12px;right:auto}
+
+/* waitlist band: the Frame corner brackets, always on, and a faint oversized WorkCell mark */
+.corners::before{content:"";position:absolute;inset:0;pointer-events:none;--c:var(--line-2);--l:22px;--w:1.5px;
+  background:linear-gradient(var(--c),var(--c)) top left/var(--l) var(--w) no-repeat,linear-gradient(var(--c),var(--c)) top left/var(--w) var(--l) no-repeat,
+    linear-gradient(var(--c),var(--c)) top right/var(--l) var(--w) no-repeat,linear-gradient(var(--c),var(--c)) top right/var(--w) var(--l) no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom left/var(--l) var(--w) no-repeat,linear-gradient(var(--c),var(--c)) bottom left/var(--w) var(--l) no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom right/var(--l) var(--w) no-repeat,linear-gradient(var(--c),var(--c)) bottom right/var(--w) var(--l) no-repeat}
+.joinband{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:40px;padding:56px 60px}
+.joinband .wm{position:absolute;z-index:-1;width:420px;height:420px;right:4%;top:50%;transform:translateY(-50%);color:var(--accent);opacity:.06}
+.joinband h3{font-size:clamp(30px,3.4vw,46px);font-weight:500;letter-spacing:-.035em;line-height:1.04}
+.joinband p{color:var(--soft);font-size:16px;margin-top:12px}
+.bandform{display:grid;grid-template-columns:minmax(0,300px) auto;gap:10px;align-items:center}
+.bandform input{font:14px/1.4 var(--mono);letter-spacing:.02em;color:var(--text);background:rgba(var(--bg-rgb),.7);border:1px solid var(--line-2);border-radius:12px;padding:15px 16px;width:100%;transition:border-color .2s, box-shadow .2s}
+.bandform input::placeholder{color:var(--muted)}
+.bandform input:focus{outline:none;border-color:rgba(44,219,26,.7);box-shadow:0 0 0 3px var(--accent-ring)}
+.bandform .cta{padding:16px 22px;font-size:15px}
+.bandnote{grid-column:1/-1;font-size:12px;color:var(--muted);min-height:1em}
+.sec.tight{padding-block:4vh}
+
+/* spec sheet */
+.spechead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:28px}
+.spechead h2{font-size:clamp(34px,4.2vw,56px);line-height:1.04}
+.spec{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line-1);border:1px solid var(--line-1);border-radius:18px;overflow:hidden}
+.spec div{background:var(--surface);padding:20px 22px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.spec dt{font-size:13px;color:var(--muted)}
+.spec dd{font-size:16px;line-height:1.4}
+.dl{display:inline-flex;align-items:center;gap:10px;padding:12px 18px;border-radius:999px;border:1px solid var(--line-2);color:var(--text);text-decoration:none;font:500 14px/1 var(--display);transition:background .2s,border-color .2s}
+.dl:hover{background:var(--raise);border-color:var(--muted)}
+.dl svg{width:16px;height:16px;color:var(--accent)}
+
+/* tour */
+.tour .grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:40px;align-items:stretch}
+.tframe{position:relative;height:auto;min-height:0;border-radius:20px;border:1px solid var(--line-1);background:radial-gradient(ellipse at 50% 45%, #17181d 0%, var(--surface) 70%);overflow:hidden}
+.tframe .pp{position:absolute;right:14px;top:14px;z-index:2;width:38px;height:38px;border-radius:50%;border:1px solid var(--line-2);background:rgba(var(--surface-rgb),.8);color:var(--text);display:grid;place-items:center;cursor:pointer}
+.tframe .pp svg{width:14px;height:14px}
+.tframe .hint{position:absolute;left:18px;bottom:16px;z-index:2;font-size:12px;color:var(--muted)}
+.tside{display:flex;flex-direction:column}
+.tside h2{font-size:clamp(30px,3vw,42px);line-height:1.06;margin-bottom:14px}
+.tside > p{color:var(--soft);font-size:15px;margin-bottom:22px}
+.tstep{position:relative;display:flex;flex-direction:column;gap:6px;padding:17px 0 17px 24px;color:var(--muted);background:none;border:0;text-align:left;font:inherit;cursor:pointer;transition:color .3s}
+.tstep::before{content:"";position:absolute;left:0;top:19px;bottom:19px;width:2px;border-radius:1px;background:var(--line-1)}
+.tstep .track{position:absolute;left:0;top:19px;width:2px;border-radius:1px;background:var(--accent);height:0}
+.tstep strong{font-weight:500;font-size:19px;display:flex;gap:10px;align-items:baseline}
+.tstep strong small{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--muted)}
+.tstep .d{font-size:15px;color:var(--muted);opacity:.65;transition:opacity .3s,color .3s}
+.tstep:hover{color:var(--soft)}
+.tstep.on{color:var(--text)} .tstep.on .d{opacity:1;color:var(--soft)} .tstep.on strong small{color:var(--accent)}
+
+/* who */
+.who .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.who .t{background:var(--surface);border:1px solid var(--line-1);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.who .t .ico{width:40px;height:40px;border-radius:11px;border:1px solid var(--line-2);display:grid;place-items:center;color:var(--accent);margin-bottom:6px}
+.who .t .ico svg{width:20px;height:20px}
+.who .t h3{font-size:17px;font-weight:500}
+.who .t p{font-size:14px;color:var(--muted)}
+
+@media (max-width:1180px){ .who .grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:980px){
+  .wgrid.l-bento{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .l-bento .tile[data-k=night]{grid-row:auto}
+}
+@media (max-width:980px){
+  .why .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .parts{grid-template-columns:1fr}
+  .spec{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tour .grid{grid-template-columns:1fr;gap:20px}
+  .tside{order:-1}
+  .who .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  .hero .copy{gap:20px}
+  .hero-ctas .cta,.ghost{font-size:14px}
+  .proof .badges{display:none}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}
+  .stats strong{font-size:24px} .stats span{font-size:12px}
+  .wgrid.l-bento{grid-template-columns:1fr}
+  .l-bento .tile[data-k],.l-bento .tile[data-k=night]{grid-column:auto;flex-direction:column}
+  .l-bento .tile[data-k] .img{width:auto;aspect-ratio:16/10;min-height:0;border-radius:17px 17px 0 0}
+  .l-bento .tile[data-k] .img::after{inset:auto 0 0 0;width:auto;height:40%;background:linear-gradient(0deg,var(--surface),rgba(17,17,20,0))}
+  .l-bento .tile[data-k] .txt{padding:6px 22px 24px}
+  .joinband{grid-template-columns:1fr;padding:36px 24px;gap:22px} .joinband .wm{width:260px;height:260px;right:-60px}
+  .bandform{width:100%;grid-template-columns:1fr}
+  .spec{grid-template-columns:1fr}
+  .tframe{height:52vh;min-height:320px}
+  .tour .grid{align-items:start}
+  .tstep{padding:9px 0 9px 18px}
+  .tstep .d{display:none} .tstep.on .d{display:block}
+  .who .grid{grid-template-columns:1fr}
+}
+</style>
+
+<div class="dots" id="dots" aria-hidden="true"></div>
+<div class="dots hot" id="dotsHot" aria-hidden="true"></div>
+
+<header class="bar wrap" id="bar">
+  <div class="inner">
+    <a class="brand" href="#hero" aria-label="Frame Innovations, back to top">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="34" stroke-linecap="round"><path d="M17 160V40q0-23 23-23h120"/><path d="M352 17h120q23 0 23 23v120"/><path d="M495 352v120q0 23-23 23H352"/><path d="M160 495H40q-23 0-23-23V352"/></g></svg>
+      <span class="label">Frame Innovations</span>
+    </a>
+    <span class="spacer"></span>
+    <a class="cta brk" href="#waitlist"><span class="cta-long">Join the waitlist</span><span class="cta-short">Waitlist</span></a>
+  </div>
+</header>
+<div class="loader" id="loader"><span id="loadTxt">Loading model</span><i id="loadBar"></i></div>
+
+<main>
+  <section class="hero wrap" id="hero">
+    <div class="stage-host" id="heroStage" aria-hidden="true"><canvas id="stage" aria-label="3D model of the WorkCell"></canvas></div>
+    <div class="inner">
+      <div class="copy" id="heroCopy">
+        <div class="title">
+          <svg class="mark rise" style="--i:0" viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M48.24 99.22C47.70 99.08 46.97 98.85 46.63 98.71C45.86 98.38 5.22 74.69 4.12 73.93C2.30 72.68 0.89 70.09 0.58 67.44C0.32 65.24 1.87 61.68 3.72 60.23C4.11 59.92 7.59 57.83 11.46 55.57C15.33 53.31 18.69 51.28 18.92 51.07C19.29 50.72 19.35 50.58 19.35 50.00C19.35 49.42 19.29 49.28 18.92 48.93C18.69 48.72 15.28 46.66 11.34 44.37C7.36 42.06 3.88 39.94 3.51 39.62C2.19 38.47 1.12 36.43 0.70 34.31C0.51 33.36 0.50 33.03 0.63 32.20C0.96 30.12 1.95 28.09 3.27 26.80C3.88 26.20 7.40 24.10 24.82 13.94C36.27 7.26 45.91 1.67 46.25 1.50C47.19 1.05 48.56 0.66 49.53 0.58C50.54 0.48 51.83 0.73 53.14 1.25C54.13 1.64 95.09 25.48 96.18 26.30C97.86 27.55 99.25 30.28 99.44 32.68C99.58 34.52 98.54 37.38 97.18 38.93C96.36 39.86 96.09 40.03 88.30 44.57C84.56 46.75 81.31 48.72 81.08 48.94C80.71 49.28 80.65 49.42 80.65 50.00C80.65 50.58 80.71 50.72 81.08 51.07C81.31 51.28 84.67 53.31 88.54 55.57C92.41 57.83 95.89 59.92 96.28 60.23C98.13 61.68 99.68 65.24 99.42 67.44C99.11 70.09 97.70 72.68 95.88 73.93C94.78 74.69 54.13 98.38 53.37 98.70C52.45 99.10 50.75 99.48 49.93 99.47C49.54 99.46 48.77 99.35 48.24 99.22ZM70.83 80.05C81.88 73.61 91.08 68.19 91.27 68.00C91.58 67.71 91.63 67.56 91.63 66.93C91.63 66.30 91.58 66.14 91.27 65.85C91.08 65.66 86.72 63.06 81.58 60.08C72.95 55.05 72.20 54.64 71.64 54.64C71.09 54.64 70.38 55.02 62.34 59.71C53.28 65.00 52.80 65.24 50.84 65.52C50.00 65.65 49.65 65.63 48.70 65.44C48.07 65.32 47.22 65.08 46.81 64.92C46.40 64.75 42.22 62.37 37.50 59.63C29.52 54.98 28.90 54.64 28.32 54.64C27.74 54.64 27.09 55.00 18.39 60.08C13.27 63.07 8.92 65.67 8.73 65.85C8.42 66.15 8.37 66.30 8.37 66.93C8.37 67.55 8.42 67.72 8.70 67.98C8.89 68.16 18.08 73.58 29.13 80.03L49.22 91.75L49.98 91.76L50.74 91.76L70.83 80.05ZM70.84 46.20C81.88 39.76 91.08 34.33 91.27 34.15C91.58 33.85 91.63 33.70 91.63 33.07C91.63 32.44 91.58 32.29 91.27 32.00C91.08 31.81 81.88 26.39 70.83 19.95L50.74 8.24L50.00 8.24L49.26 8.24L29.17 19.95C18.12 26.39 8.92 31.81 8.73 32.00C8.41 32.29 8.37 32.44 8.37 33.09C8.37 33.80 8.39 33.86 8.86 34.24C9.13 34.47 18.32 39.88 29.28 46.27L49.22 57.90L49.99 57.91L50.76 57.91L70.84 46.20Z"/></svg>
+          <div class="name rise" style="--i:1"><h1>The WorkCell</h1><p class="by">by Frame Innovations</p></div>
+          <p class="tag rise" style="--i:2">Part to print, worry‑free.</p>
+        </div>
+        <div class="stats rise" style="--i:3" aria-label="Headline numbers">
+          <div><strong>~$5k</strong><span>All-in, both printers</span></div>
+          <div><strong>&lt;60 s</strong><span>Between prints</span></div>
+          <div><strong>214 h</strong><span>Hands-off record</span></div>
+          <div><strong>300²</strong><span>mm build area</span></div>
+        </div>
+        <div class="hero-ctas rise" style="--i:4">
+          <a class="cta brk" href="#waitlist">Join the waitlist</a>
+          <a class="ghost" href="#video" id="watchBtn"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16l13-8z" fill="currentColor"/></svg></i>Watch the video</a>
+        </div>
+        <div class="proof rise" style="--i:5">
+          <div class="badges">
+            <span class="badge" title="Gold, National Robotics Challenge 2025"><b>Gold</b> NRC 2025</span>
+            <span class="badge"><b>Honda</b> Innovation Award</span>
+            <span class="badge">Demoed at <b>Open Sauce</b></span>
+          </div>
+          <p>Used every day by <b>140+ engineers</b> at VT CRO.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="video">
+    <div class="inner">
+      <div class="player reveal" id="player">
+        <img class="poster" src="https://i.ytimg.com/vi/6d8gg3khpiE/maxresdefault.jpg" alt="" onerror="this.remove()">
+        <div class="cap"><span class="k">Launch video</span><strong>The WorkCell, start to finish</strong>
+          <button type="button" class="play" id="playBtn" aria-label="Play the WorkCell launch video"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16l13-8z" fill="currentColor"/></svg></i>Watch the video</button></div>
+      </div>
+      <p class="vidalt" id="vidAlt" hidden>Claude’s preview blocks embedded YouTube players, so the video only plays inline once the site is on a real host. <a href="https://www.youtube.com/watch?v=6d8gg3khpiE" target="_blank" rel="noopener">Watch on YouTube ↗</a></p>
+    </div>
+  </section>
+
+  <section class="sec wrap why" id="why">
+    <div class="inner">
+      <div class="head reveal"><h2>Why the WorkCell</h2></div>
+      <div class="wgrid l-bento" id="wgrid">
+        <article class="tile brk reveal" data-k="night"><div class="img" id="img-night"></div><div class="txt"><strong>24/7</strong><h3>Prints nights and weekends</h3><p>Finished plates go to storage and the next job starts, with nobody in the lab.</p></div></article>
+        <article class="tile brk reveal" data-k="swap"><div class="img" id="img-swap"></div><div class="txt"><strong>&lt;60 s</strong><h3>From one print to the next</h3><p>A clean plate from the 15-plate bank is on the bed and printing in under a minute.</p></div></article>
+        <article class="tile brk reveal" data-k="price"><div class="img" id="img-price"></div><div class="txt"><strong>1/16</strong><h3>The price of an industrial cell</h3><p>About $5,000 with both printers, against $80,000+ for a Mosaic Array.</p></div></article>
+        <article class="tile brk reveal" data-k="store"><div class="img" id="img-slot"><div class="minitoast"><i><svg viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M48.24 99.22C47.70 99.08 46.97 98.85 46.63 98.71C45.86 98.38 5.22 74.69 4.12 73.93C2.30 72.68 0.89 70.09 0.58 67.44C0.32 65.24 1.87 61.68 3.72 60.23C4.11 59.92 7.59 57.83 11.46 55.57C15.33 53.31 18.69 51.28 18.92 51.07C19.29 50.72 19.35 50.58 19.35 50.00C19.35 49.42 19.29 49.28 18.92 48.93C18.69 48.72 15.28 46.66 11.34 44.37C7.36 42.06 3.88 39.94 3.51 39.62C2.19 38.47 1.12 36.43 0.70 34.31C0.51 33.36 0.50 33.03 0.63 32.20C0.96 30.12 1.95 28.09 3.27 26.80C3.88 26.20 7.40 24.10 24.82 13.94C36.27 7.26 45.91 1.67 46.25 1.50C47.19 1.05 48.56 0.66 49.53 0.58C50.54 0.48 51.83 0.73 53.14 1.25C54.13 1.64 95.09 25.48 96.18 26.30C97.86 27.55 99.25 30.28 99.44 32.68C99.58 34.52 98.54 37.38 97.18 38.93C96.36 39.86 96.09 40.03 88.30 44.57C84.56 46.75 81.31 48.72 81.08 48.94C80.71 49.28 80.65 49.42 80.65 50.00C80.65 50.58 80.71 50.72 81.08 51.07C81.31 51.28 84.67 53.31 88.54 55.57C92.41 57.83 95.89 59.92 96.28 60.23C98.13 61.68 99.68 65.24 99.42 67.44C99.11 70.09 97.70 72.68 95.88 73.93C94.78 74.69 54.13 98.38 53.37 98.70C52.45 99.10 50.75 99.48 49.93 99.47C49.54 99.46 48.77 99.35 48.24 99.22ZM70.83 80.05C81.88 73.61 91.08 68.19 91.27 68.00C91.58 67.71 91.63 67.56 91.63 66.93C91.63 66.30 91.58 66.14 91.27 65.85C91.08 65.66 86.72 63.06 81.58 60.08C72.95 55.05 72.20 54.64 71.64 54.64C71.09 54.64 70.38 55.02 62.34 59.71C53.28 65.00 52.80 65.24 50.84 65.52C50.00 65.65 49.65 65.63 48.70 65.44C48.07 65.32 47.22 65.08 46.81 64.92C46.40 64.75 42.22 62.37 37.50 59.63C29.52 54.98 28.90 54.64 28.32 54.64C27.74 54.64 27.09 55.00 18.39 60.08C13.27 63.07 8.92 65.67 8.73 65.85C8.42 66.15 8.37 66.30 8.37 66.93C8.37 67.55 8.42 67.72 8.70 67.98C8.89 68.16 18.08 73.58 29.13 80.03L49.22 91.75L49.98 91.76L50.74 91.76L70.83 80.05ZM70.84 46.20C81.88 39.76 91.08 34.33 91.27 34.15C91.58 33.85 91.63 33.70 91.63 33.07C91.63 32.44 91.58 32.29 91.27 32.00C91.08 31.81 81.88 26.39 70.83 19.95L50.74 8.24L50.00 8.24L49.26 8.24L29.17 19.95C18.12 26.39 8.92 31.81 8.73 32.00C8.41 32.29 8.37 32.44 8.37 33.09C8.37 33.80 8.39 33.86 8.86 34.24C9.13 34.47 18.32 39.88 29.28 46.27L49.22 57.90L49.99 57.91L50.76 57.91L70.84 46.20Z"/></svg></i><span><b>@maya</b> bracket finished · <b>shelf 7</b></span></div></div><div class="txt"><strong>32 slots</strong><h3>Optimized storage</h3><p>Shelf space is reserved from each print’s height, so short parts never waste a tall slot. The owner is pinged with the shelf number.</p></div></article>
+        <article class="tile brk reveal" data-k="app"><div class="img appmock" aria-hidden="true"><div class="am">
+          <div class="am-stats"><div><b>219</b><span>prints</span></div><div><b>231 h</b><span>printed</span></div><div><b>214 h</b><span>longest run</span></div></div>
+          <div class="am-p"><span>Top printer</span><i><i style="width:64%"></i></i><em>64%</em></div>
+          <div class="am-p"><span>Bottom printer</span><i><i style="width:22%"></i></i><em>22%</em></div>
+          <div class="am-q"><span>bracket_v4.stl</span><em class="g">Slicing</em></div>
+          <div class="am-q"><span>gripper_jaw.gcode</span><em>Queued · 2nd</em></div>
+        </div></div><div class="txt"><strong>1 queue</strong><h3>Slice, queue and track in one place</h3><p>Upload a part and slice it in the browser. One shared queue feeds both printers, with live progress and stats for every print.</p></div></article>
+        <article class="tile brk reveal" data-k="foot"><div class="img" id="img-foot"><span class="minitoast dimchip">1.04 × 0.99 m footprint</span></div><div class="txt"><strong>≈1 m²</strong><h3>Fits beside a workbench</h3><p>1.04 × 0.99 m and 1.66 m tall, on casters.</p></div></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap tight" id="join1">
+    <div class="inner">
+      <div class="joinband corners reveal">
+        <svg class="wm" viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M48.24 99.22C47.70 99.08 46.97 98.85 46.63 98.71C45.86 98.38 5.22 74.69 4.12 73.93C2.30 72.68 0.89 70.09 0.58 67.44C0.32 65.24 1.87 61.68 3.72 60.23C4.11 59.92 7.59 57.83 11.46 55.57C15.33 53.31 18.69 51.28 18.92 51.07C19.29 50.72 19.35 50.58 19.35 50.00C19.35 49.42 19.29 49.28 18.92 48.93C18.69 48.72 15.28 46.66 11.34 44.37C7.36 42.06 3.88 39.94 3.51 39.62C2.19 38.47 1.12 36.43 0.70 34.31C0.51 33.36 0.50 33.03 0.63 32.20C0.96 30.12 1.95 28.09 3.27 26.80C3.88 26.20 7.40 24.10 24.82 13.94C36.27 7.26 45.91 1.67 46.25 1.50C47.19 1.05 48.56 0.66 49.53 0.58C50.54 0.48 51.83 0.73 53.14 1.25C54.13 1.64 95.09 25.48 96.18 26.30C97.86 27.55 99.25 30.28 99.44 32.68C99.58 34.52 98.54 37.38 97.18 38.93C96.36 39.86 96.09 40.03 88.30 44.57C84.56 46.75 81.31 48.72 81.08 48.94C80.71 49.28 80.65 49.42 80.65 50.00C80.65 50.58 80.71 50.72 81.08 51.07C81.31 51.28 84.67 53.31 88.54 55.57C92.41 57.83 95.89 59.92 96.28 60.23C98.13 61.68 99.68 65.24 99.42 67.44C99.11 70.09 97.70 72.68 95.88 73.93C94.78 74.69 54.13 98.38 53.37 98.70C52.45 99.10 50.75 99.48 49.93 99.47C49.54 99.46 48.77 99.35 48.24 99.22ZM70.83 80.05C81.88 73.61 91.08 68.19 91.27 68.00C91.58 67.71 91.63 67.56 91.63 66.93C91.63 66.30 91.58 66.14 91.27 65.85C91.08 65.66 86.72 63.06 81.58 60.08C72.95 55.05 72.20 54.64 71.64 54.64C71.09 54.64 70.38 55.02 62.34 59.71C53.28 65.00 52.80 65.24 50.84 65.52C50.00 65.65 49.65 65.63 48.70 65.44C48.07 65.32 47.22 65.08 46.81 64.92C46.40 64.75 42.22 62.37 37.50 59.63C29.52 54.98 28.90 54.64 28.32 54.64C27.74 54.64 27.09 55.00 18.39 60.08C13.27 63.07 8.92 65.67 8.73 65.85C8.42 66.15 8.37 66.30 8.37 66.93C8.37 67.55 8.42 67.72 8.70 67.98C8.89 68.16 18.08 73.58 29.13 80.03L49.22 91.75L49.98 91.76L50.74 91.76L70.83 80.05ZM70.84 46.20C81.88 39.76 91.08 34.33 91.27 34.15C91.58 33.85 91.63 33.70 91.63 33.07C91.63 32.44 91.58 32.29 91.27 32.00C91.08 31.81 81.88 26.39 70.83 19.95L50.74 8.24L50.00 8.24L49.26 8.24L29.17 19.95C18.12 26.39 8.92 31.81 8.73 32.00C8.41 32.29 8.37 32.44 8.37 33.09C8.37 33.80 8.39 33.86 8.86 34.24C9.13 34.47 18.32 39.88 29.28 46.27L49.22 57.90L49.99 57.91L50.76 57.91L70.84 46.20Z"/></svg>
+        <div class="jb-copy"><h3>Get a WorkCell<br>for your lab.</h3><p>Join the waitlist for first access to kits and pricing.</p></div>
+        <form class="bandform" novalidate><input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><input type="email" placeholder="you@lab.edu" aria-label="Email address" autocomplete="email" required><button class="cta brk" type="submit">Join the waitlist</button><span class="bandnote" aria-live="polite"></span></form>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="savings">
+    <div class="inner">
+      <div class="head reveal">
+        <h2>How much it saves</h2>
+        <p>A finished print sits on the bed until someone clears it. Outside lab hours, that can mean all night or all weekend. Set up your lab and see what comes back.</p>
+      </div>
+      <div class="calc">
+        <div class="panelbox controls reveal">
+          <div class="presets"><span>Start from</span>
+            <div class="chips" role="group" aria-label="Presets">
+              <button type="button" class="chip" data-p="4,3,6">Design team</button>
+              <button type="button" class="chip" data-p="8,5,9">R&amp;D lab</button>
+              <button type="button" class="chip" data-p="1,4,3">Hobbyist</button>
+            </div>
+          </div>
+          <div class="field"><div class="top"><label for="c-n">Printers</label><output id="o-n" for="c-n"></output></div><input id="c-n" type="range" min="1" max="24" step="1" value="4"></div>
+          <div class="field"><div class="top"><label for="c-l">Average print</label><output id="o-l" for="c-l"></output></div><input id="c-l" type="range" min="0.5" max="12" step="0.5" value="3"></div>
+          <div class="field"><div class="top"><label for="c-h">Someone in the lab</label><output id="o-h" for="c-h"></output></div><input id="c-h" type="range" min="1" max="16" step="1" value="6"></div>
+        </div>
+        <div class="panelbox result reveal" style="--d:90ms" aria-live="polite">
+          <p class="headline">Your <span id="h-n">4 printers sit</span> idle <span id="h-idle">0</span> hours a week. The WorkCell puts <em id="h-back">0</em> of them back to work.</p>
+          <div class="week" aria-label="One printer over one week">
+            <div class="row labrow"><span>Lab staffed</span><svg id="wk-lab" class="lab" viewBox="0 0 168 1" preserveAspectRatio="none" aria-hidden="true"></svg><b></b></div>
+            <div class="row"><span>Today</span><svg id="wk-man" class="man" viewBox="0 0 168 10" preserveAspectRatio="none" aria-hidden="true"></svg><b id="u-man-t">0%</b></div>
+            <div class="row"><span>With WorkCell</span><svg id="wk-wc" class="wc" viewBox="0 0 168 10" preserveAspectRatio="none" aria-hidden="true"></svg><b id="u-wc-t">0%</b></div>
+            <div class="days"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            <div class="legend"><span><i style="background:var(--accent)"></i>Printing</span><span><i style="background:var(--idle);border:1px solid var(--line-2)"></i>Idle, finished print waiting to be cleared</span><span><i style="background:var(--soft);height:3px;width:14px;border-radius:2px;vertical-align:3px"></i>Someone in the lab</span></div>
+          </div>
+          <div class="kpis">
+            <div><strong id="r-idle">0</strong><span>printer-hours idle each week today</span></div>
+            <div class="good"><strong id="r-back">0</strong><span>hours a week back to printing</span></div>
+            <div class="good"><strong id="r-extra">0</strong><span>more prints a week</span></div>
+          </div>
+        </div>
+        <details class="assume"><summary>How we calculate this</summary><p>One printer is simulated over four weeks. The lab is staffed Monday to Friday from 9:00 for the hours you set, and a finished print waits about 15 minutes before someone clears it. Outside those hours it waits until the next morning. The WorkCell swaps plates in under 60 seconds, runs 2 printers per cell and can work through 15 plates before someone needs to empty the shelves. Costs in the comparison below use $80,000 per 4-printer Mosaic Array (2023 list price) and Prusa’s announced starting price before VAT.</p></details>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="sec wrap" id="specs">
+    <div class="inner">
+      <div class="spechead reveal">
+        <h2>Spec sheet</h2>
+        <a class="dl" href="workcell-spec-sheet.pdf" download="WorkCell-spec-sheet.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download spec sheet (PDF)</a>
+      </div>
+      <dl class="spec reveal">
+        <div><dt>Price</dt><dd>~$5,000, both printers included</dd></div>
+        <div><dt>Printers</dt><dd>2 × Voron 2.4 running Klipper</dd></div>
+        <div><dt>Build volume</dt><dd>300 × 300 × 300 mm per printer</dd></div>
+        <div><dt>Plate bank</dt><dd>15 magnetic, swappable plates</dd></div>
+        <div><dt>Storage</dt><dd>32 shelf slots at 30 mm pitch, sized to each print</dd></div>
+        <div><dt>Swap time</dt><dd>Under 60 s, print to print</dd></div>
+        <div><dt>Filament</dt><dd>4 kg per printer, 8 kg on board</dd></div>
+        <div><dt>Footprint</dt><dd>1.04 × 0.99 m, 1.66 m tall, on casters</dd></div>
+        <div><dt>Power</dt><dd>Standard wall outlets: 1 plug for the cell, 1 per printer</dd></div>
+        <div><dt>Network</dt><dd>Wi-Fi</dd></div>
+        <div><dt>Controller</dt><dd>Raspberry Pi 5 + 2 × Raspberry Pi Pico</dd></div>
+        <div><dt>Vision</dt><dd>Onboard camera + 9 AprilTags, 0.2 mm alignment</dd></div>
+        <div><dt>Software</dt><dd>Web queue, in-browser slicing, Discord alerts</dd></div>
+        <div><dt>Longest hands-off run</dt><dd>214 hours</dd></div>
+        <div><dt>Open source</dt><dd>CAD and software, December 2026</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="compare">
+    <div class="inner">
+      <div class="head reveal">
+        <h2>Industrial automation at a hobby-printer price.</h2>
+      </div>
+      <div class="tablewrap reveal">
+        <table>
+          <thead><tr><th scope="col"></th><th scope="col" class="us">WorkCell<small>by Frame Innovations</small></th><th scope="col">Manual farm<small>2 printers + people</small></th><th scope="col">Hobby plate swappers<small>e.g. PlateCycler, AutoFarm3D</small></th><th scope="col">Mosaic Array<small>4-printer cell</small></th><th scope="col">Prusa Pro AFS<small>scalable farm</small></th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Price</th><td class="us"><b>~$5,000</b>, both printers included</td><td>Printers only, plus staff time</td><td>$80–$129 per printer, some with a monthly subscription</td><td>$80,000–$95,000</td><td>From $50,000</td></tr>
+            <tr><th scope="row">Printers</th><td class="us">2 × Voron 2.4</td><td>Any</td><td>1, specific Bambu or Prusa models</td><td>4</td><td>Many (34 in the demo)</td></tr>
+            <tr><th scope="row">Build area</th><td class="us">300 × 300 mm</td><td>Varies</td><td>From 180 × 180 mm</td><td>355 × 355 mm</td><td>Not listed</td></tr>
+            <tr><th scope="row">Clears the bed</th><td class="us"><span class="ck">CK Swaps plates</span></td><td>By hand</td><td>Swaps plates or pushes parts off</td><td>Swaps beds</td><td>Arm removes sheets</td></tr>
+            <tr><th scope="row">Sorted storage</th><td class="us"><span class="ck">CK A slot per print, sized to the part</span></td><td class="no">—</td><td>Parts drop or stack together</td><td>Cart, sorted by height</td><td>Collection bin</td></tr>
+            <tr><th scope="row">Owner alerts</th><td class="us"><span class="ck">CK Discord message with the shelf number</span></td><td class="no">—</td><td>Depends on the software</td><td class="no">Not listed</td><td class="no">Not listed</td></tr>
+            <tr><th scope="row">Web queue + slicing</th><td class="us"><span class="ck">CK Built in</span></td><td class="no">—</td><td>Through third-party software</td><td>Canvas software</td><td>Prusa Connect</td></tr>
+            <tr><th scope="row">Open source</th><td class="us"><span class="ck">CK CAD + software, Dec 2026</span></td><td class="no">—</td><td>Varies</td><td class="no">No</td><td class="no">Not listed</td></tr>
+            <tr class="yours"><th scope="row">For your <span id="t-n">4 printers</span></th><td class="us"><b id="t-wc">$10,000</b><small id="t-wc-s">2 cells, printers included</small></td><td><b>Printers</b><small>plus staff time</small></td><td><b id="t-hob">$320–$516</b><small>plus the printers</small></td><td><b id="t-mos">$80,000</b><small id="t-mos-s">1 Array</small></td><td><b>From $50,000</b><small>starting price</small></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="srcs">Competitor details from public listings and press coverage: <a href="https://all3dp.com/4/new-automated-print-farm-in-a-box-from-mosaic/" target="_blank" rel="noopener">Mosaic Array</a>, <a href="https://www.3printr.com/prusa-research-announces-price-for-its-automated-3d-printing-farm-1659973" target="_blank" rel="noopener">Prusa AFS</a>, <a href="https://www.tomshardware.com/3d-printing/new-auto-ejection-tool-for-bambu-lab-print-farms-automatically-ejects-finished-3d-prints-from-the-machine-usd129-kit-includes-auto-door-opener-and-special-bed-surface-for-frictionless-part-ejection" target="_blank" rel="noopener">3DQue AutoFarm3D</a>, <a href="https://www.hackster.io/news/this-inexpensive-product-turns-your-bambu-lab-a1-mini-into-a-desktop-factory-f621434e1954" target="_blank" rel="noopener">Chitu PlateCycler</a>.</p>
+
+    </div>
+  </section>
+
+  <section class="sec wrap tour" id="tour">
+    <div class="inner grid">
+      <div class="tframe reveal" id="tframe">
+        <div class="stage-host" id="tourStage" aria-label="Interactive 3D tour of the WorkCell"></div>
+        <button type="button" class="pp" id="tourPP" aria-label="Pause the tour"><svg id="ppIco" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></button>
+        <span class="hint">Pick a step, or let it play</span>
+      </div>
+      <div class="tside reveal" style="--d:100ms">
+        <h2>How it works</h2>
+        <div id="tsteps"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap flow" id="software" data-ch="6" data-name="Software">
+    <div class="inner grid">
+      <div class="steps reveal">
+        <h2>Drop a part in. Pick it up from a shelf.</h2>
+        <div class="step"><i class="track"></i><strong><small>01</small>Drag in an STL</strong><span class="d">Or G-code. Sign in with your Discord account.</span></div>
+        <div class="step"><i class="track"></i><strong><small>02</small>Slice in the browser</strong><span class="d">OrcaSlicer runs on the server with tuned profiles.</span></div>
+        <div class="step"><i class="track"></i><strong><small>03</small>Join the shared queue</strong><span class="d">The next free printer takes the next job.</span></div>
+        <div class="step"><i class="track"></i><strong><small>04</small>Watch it print</strong><span class="d">Live progress for every printer.</span></div>
+        <div class="step"><i class="track"></i><strong><small>05</small>Get a ping</strong><span class="d">Discord tells you which shelf it’s on.</span></div>
+      </div>
+      <div class="reveal" style="--d:120ms">
+        <div class="app" id="app" aria-label="Looping example of the WorkCell web app">
+          <div class="chrome"><i></i><i></i><i></i><span class="url">workcell.vtcro.org/dashboard</span></div>
+          <div class="body">
+            <div class="col">
+              <div class="card" id="c-upload"><h3><span>Upload</span><span>STL or G-code</span></h3>
+                <div class="drop" id="drop"><span id="dropTxt">Drag a file here</span>
+                  <div class="file" id="file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7z"/></svg>bracket_v4.stl · 2.1 MB</div>
+                </div>
+              </div>
+              <div class="card" id="c-slice"><h3><span>Slice</span><span id="sliceState">Waiting</span></h3>
+                <div class="opts"><span>Layer height</span><span>0.20 mm</span><span>Walls</span><span>2</span><span>Infill</span><span>15% gyroid</span><span>Supports</span><span>Auto</span></div>
+                <div class="meter"><i id="sliceBar"></i></div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="card" id="c-queue"><h3><span>Queue</span><span id="qCount">2 jobs</span></h3>
+                <div class="q" id="queue">
+                  <div id="q0"><span>gripper_jaw.gcode</span><span>38 m</span></div>
+                  <div><span>sensor_mount.stl</span><span>1 h 05 m</span></div>
+                  <div class="mine" id="mine"><span>bracket_v4 · you</span><span>1 h 12 m</span></div>
+                </div>
+              </div>
+              <div class="card" id="c-print"><h3><span>Top printer</span><span id="printState">Printing gripper_jaw</span></h3>
+                <div class="meter lg"><i id="printBar"></i></div>
+                <div class="pstat"><span>Progress</span><b id="printPct">0%</b></div>
+                <div class="pstat"><span>Time left</span><b id="printEta">1 h 12 m</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="toast" id="toast" role="status">
+            <div class="av"><svg viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M48.24 99.22C47.70 99.08 46.97 98.85 46.63 98.71C45.86 98.38 5.22 74.69 4.12 73.93C2.30 72.68 0.89 70.09 0.58 67.44C0.32 65.24 1.87 61.68 3.72 60.23C4.11 59.92 7.59 57.83 11.46 55.57C15.33 53.31 18.69 51.28 18.92 51.07C19.29 50.72 19.35 50.58 19.35 50.00C19.35 49.42 19.29 49.28 18.92 48.93C18.69 48.72 15.28 46.66 11.34 44.37C7.36 42.06 3.88 39.94 3.51 39.62C2.19 38.47 1.12 36.43 0.70 34.31C0.51 33.36 0.50 33.03 0.63 32.20C0.96 30.12 1.95 28.09 3.27 26.80C3.88 26.20 7.40 24.10 24.82 13.94C36.27 7.26 45.91 1.67 46.25 1.50C47.19 1.05 48.56 0.66 49.53 0.58C50.54 0.48 51.83 0.73 53.14 1.25C54.13 1.64 95.09 25.48 96.18 26.30C97.86 27.55 99.25 30.28 99.44 32.68C99.58 34.52 98.54 37.38 97.18 38.93C96.36 39.86 96.09 40.03 88.30 44.57C84.56 46.75 81.31 48.72 81.08 48.94C80.71 49.28 80.65 49.42 80.65 50.00C80.65 50.58 80.71 50.72 81.08 51.07C81.31 51.28 84.67 53.31 88.54 55.57C92.41 57.83 95.89 59.92 96.28 60.23C98.13 61.68 99.68 65.24 99.42 67.44C99.11 70.09 97.70 72.68 95.88 73.93C94.78 74.69 54.13 98.38 53.37 98.70C52.45 99.10 50.75 99.48 49.93 99.47C49.54 99.46 48.77 99.35 48.24 99.22ZM70.83 80.05C81.88 73.61 91.08 68.19 91.27 68.00C91.58 67.71 91.63 67.56 91.63 66.93C91.63 66.30 91.58 66.14 91.27 65.85C91.08 65.66 86.72 63.06 81.58 60.08C72.95 55.05 72.20 54.64 71.64 54.64C71.09 54.64 70.38 55.02 62.34 59.71C53.28 65.00 52.80 65.24 50.84 65.52C50.00 65.65 49.65 65.63 48.70 65.44C48.07 65.32 47.22 65.08 46.81 64.92C46.40 64.75 42.22 62.37 37.50 59.63C29.52 54.98 28.90 54.64 28.32 54.64C27.74 54.64 27.09 55.00 18.39 60.08C13.27 63.07 8.92 65.67 8.73 65.85C8.42 66.15 8.37 66.30 8.37 66.93C8.37 67.55 8.42 67.72 8.70 67.98C8.89 68.16 18.08 73.58 29.13 80.03L49.22 91.75L49.98 91.76L50.74 91.76L70.83 80.05ZM70.84 46.20C81.88 39.76 91.08 34.33 91.27 34.15C91.58 33.85 91.63 33.70 91.63 33.07C91.63 32.44 91.58 32.29 91.27 32.00C91.08 31.81 81.88 26.39 70.83 19.95L50.74 8.24L50.00 8.24L49.26 8.24L29.17 19.95C18.12 26.39 8.92 31.81 8.73 32.00C8.41 32.29 8.37 32.44 8.37 33.09C8.37 33.80 8.39 33.86 8.86 34.24C9.13 34.47 18.32 39.88 29.28 46.27L49.22 57.90L49.99 57.91L50.76 57.91L70.84 46.20Z"/></svg></div>
+            <div><span class="who">WorkCell · Discord</span><p><b>@you</b> bracket_v4 finished and is in <b>shelf 7</b>.</p></div>
+          </div>
+        </div>
+        <p class="appnote">Example files and timings.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="sec wrap who" id="who">
+    <div class="inner">
+      <div class="head reveal">
+        <h2>Who it’s for</h2>
+        <p>Anyone who prototypes every day and is tired of babysitting printers.</p>
+      </div>
+      <div class="grid">
+        <article class="t reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M7 20v-3h10v3"/><path d="M12 17v-5l5-4"/><circle cx="12" cy="12" r="1.6"/><path d="M17 8l1.5-3M17 8l3 1"/></svg></div><h3>Robotics labs</h3><p>Fixtures, mounts and end effectors keep printing between test runs.</p></article>
+        <article class="t reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M7.5 14h9"/></svg></div><h3>R&amp;D labs</h3><p>Queue iterations at 6 pm and review every one the next morning.</p></article>
+        <article class="t reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v6"/></svg></div><h3>College design teams</h3><p>One shared farm the whole team queues from a browser.</p></article>
+        <article class="t reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg></div><h3>Makerspaces</h3><p>Members print around the clock without staff clearing beds.</p></article>
+        <article class="t reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></div><h3>Hobbyists</h3><p>Queue a weekend of prints and walk away.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="waitlist">
+    <div class="inner wait">
+      <div class="pitch reveal">
+        <h2>Your lab’s print farm, without the farm price.</h2>
+        <p>Built for robotics and R&amp;D labs, college design teams, makerspaces and serious hobbyists: anyone who prototypes every day.</p>
+        <ul><li>First look at kits and pricing</li><li>Open-source CAD and software release, December 2026</li><li>Build updates from the team</li></ul>
+      </div>
+      <form id="waitForm" class="reveal" style="--d:120ms" novalidate>
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="two">
+          <label for="w-name">Name<input id="w-name" name="name" autocomplete="name"></label>
+          <label for="w-email">Email<input id="w-email" name="email" type="email" autocomplete="email" required></label>
+        </div>
+        <div class="two">
+          <label for="w-type">You are a…<select id="w-type" name="type"><option>College design team</option><option>R&amp;D or research lab</option><option>Makerspace</option><option>Hobbyist</option><option>Other</option></select></label>
+          <label for="w-printers">Printers you run today<input id="w-printers" name="printers" type="number" min="0" inputmode="numeric" placeholder="e.g. 4"></label>
+        </div>
+        <label for="w-msg">What are you building? (optional)<textarea id="w-msg" name="msg"></textarea></label>
+        <button class="cta brk" type="submit">Join the waitlist →</button>
+        <p class="note" id="waitNote" aria-live="polite">Questions? Email <a href="mailto:hello@frameinnovations.com">hello@frameinnovations.com</a></p>
+      </form>
+
+    </div>
+  </section>
+  <footer class="wrap">
+    <div class="inner foot">
+      <a class="brand" href="#hero" aria-label="Frame Innovations, back to top">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="34" stroke-linecap="round"><path d="M17 160V40q0-23 23-23h120"/><path d="M352 17h120q23 0 23 23v120"/><path d="M495 352v120q0 23-23 23H352"/><path d="M160 495H40q-23 0-23-23V352"/></g></svg>
+        <span class="label">Frame Innovations</span>
+      </a>
+      <nav class="flinks" aria-label="Footer"><a href="#why">Why</a><a href="#savings">Savings</a><a href="#specs">Specs</a><a href="#compare">Compare</a><a href="#tour">How it works</a><a href="#waitlist">Waitlist</a><a href="mailto:hello@frameinnovations.com">Contact</a></nav>
+      <span class="fcopy">© 2026 Frame Innovations</span>
+    </div>
+  </footer>
+</main>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/+esm';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js/+esm';
+import { MeshoptDecoder } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/meshopt_decoder.module.js/+esm';
+import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/environments/RoomEnvironment.js/+esm';
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches || location.hash === '#instant';
+const el = id => document.getElementById(id);
+const { clamp, smoothstep, lerp, degToRad } = THREE.MathUtils;
+const canvas = el('stage'), dotsEl = el('dots'), heroCopy = el('heroCopy'), bar = el('bar');
+const DPR = Math.min(devicePixelRatio, innerWidth < 760 ? 1.5 : 2);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setClearColor(0x000000, 0);
+renderer.setPixelRatio(DPR);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.localClippingEnabled = true;
+const scene = new THREE.Scene();
+const BG = new THREE.Color('#09090B'), TILE_BG = new THREE.Color('#111114');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 50);
+const key = new THREE.DirectionalLight('#fff6ea', 2.4); key.position.set(-2.5, 4, 3.5); scene.add(key);
+const fill = new THREE.DirectionalLight('#e6eeff', 0.8); fill.position.set(3, 1.5, 2); scene.add(fill);
+const back = new THREE.DirectionalLight('#ffffff', 0.9); back.position.set(1, 3, -4); scene.add(back);
+scene.add(new THREE.HemisphereLight('#dfe5ee', '#1a1b1f', 0.35));
+{ // soft floor glow under the cell
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), grd = g.createRadialGradient(128,128,0,128,128,128);
+  grd.addColorStop(0,'rgba(236,237,230,0.07)'); grd.addColorStop(1,'rgba(236,237,230,0)'); g.fillStyle = grd; g.fillRect(0,0,256,256);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(4.5,4.5), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+  floor.rotation.x = -Math.PI/2; floor.position.set(-0.05,-0.128,0); scene.add(floor);
+}
+
+// Onshape is Z-up in millimetres-as-metres; the wrapper turns it Y-up.
+const model = new THREE.Group(); model.rotation.x = -Math.PI/2; scene.add(model); model.updateMatrixWorld(true);
+const M = 0.001;
+
+// ---------- machine choreography in story units u (Onshape axes, metres): column x, pick-and-place z, claw stroke y ----------
+const P_TOP = { dx: 0.062, dz: 0.135 }, SLOT = { dx: 0.507, dz: 0.465 - 0.685 }, BANK = { dx: 0.507, dz: 1.320 - 0.685 };
+const AY = 0.337, LIFT = 0.010;
+const K = [
+  [0.0,0,0,0],[1.74,0,0,0],
+  [2.06,P_TOP.dx,P_TOP.dz,0],[2.30,P_TOP.dx,P_TOP.dz,AY],[2.38,P_TOP.dx,P_TOP.dz+LIFT,AY],[2.62,P_TOP.dx,P_TOP.dz+LIFT,0],   // pull the finished plate
+  [3.90,SLOT.dx,SLOT.dz+LIFT,0],[4.26,SLOT.dx,SLOT.dz+LIFT,AY],[4.32,SLOT.dx,SLOT.dz,AY],[4.54,SLOT.dx,SLOT.dz,0],         // ride to its slot and set it down
+  [4.98,BANK.dx,BANK.dz,0],[5.10,BANK.dx,BANK.dz,AY],[5.14,BANK.dx,BANK.dz+LIFT,AY],[5.22,BANK.dx,BANK.dz+LIFT,0],         // fetch a clean plate
+  [5.36,P_TOP.dx,P_TOP.dz+LIFT,0],[5.46,P_TOP.dx,P_TOP.dz+LIFT,AY],[5.49,P_TOP.dx,P_TOP.dz,AY],[5.57,P_TOP.dx,P_TOP.dz,0],  // load the printer
+  [5.66,0,0,0],[20,0,0,0]
+];
+const ease = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
+function state(uu){
+  for (let i = 0; i < K.length - 1; i++){ const a = K[i], b = K[i+1];
+    if (uu <= b[0]){ const t = ease(clamp((uu - a[0]) / (b[0] - a[0] || 1), 0, 1));
+      return { dx: a[1]+(b[1]-a[1])*t, dz: a[2]+(b[2]-a[2])*t, ay: a[3]+(b[3]-a[3])*t }; } }
+  return { dx:0, dz:0, ay:0 };
+}
+const plateA = { from: 2.30, to: 4.32, ref: { dx:0, dz:0, ay:0 } };
+const plateB = { from: 5.10, to: 5.49, ref: { dx:BANK.dx, dz:BANK.dz, ay:AY } };
+const plateOffset = (p, uu) => { const s = state(clamp(uu, p.from, p.to)); return new THREE.Vector3(s.dx-p.ref.dx, s.ay-p.ref.ay, s.dz-p.ref.dz); };
+const PRINT = [1.08, 1.42]; // print runs across chapter 1
+
+
+// ---------- camera shots (fitted to whatever frame the model is drawn in) ----------
+const WHOLE = [[-596,-496,-129],[443,491,1533]];
+const PRINTER_TOP = [[-440,-40,790],[-60,330,1010]], BANK_BOX = [[10,-30,1170],[430,330,1340]];
+// p: which chapter's caption the shot shares the screen with; m: phone-only framing
+const SHOT = [
+  null,                                                                       // 0 hero (front view, fitted beside the title)
+  { box: [[-440,-40,800],[-80,330,1010]], az: -12, el: 34, fill: 0.66, p: 1 }, // 1 top printer
+  { box: [[-480,-500,690],[-60,-60,880]], az: 34, el: 20, fill: 0.72, p: 2,    // 2 pick & place at the printer
+    m: { box: [[-596,-500,560],[60,330,1010]], az: 14, el: 18, fill: 0.95 } },
+  { box: WHOLE, az: 30, el: 10, fill: 1.0, p: 3 },                            // 3 gantry: the whole cell
+  { box: [[10,-30,60],[430,330,1530]], az: 28, el: 12, fill: 0.86, p: 4 },     // 4 storage column, top to bottom
+  { box: BANK_BOX, az: 24, el: 20, fill: 0.70, p: 5 },                         // 5a plate bank
+  { box: WHOLE, az: -24, el: 9, fill: 0.62, full: true },                     // 6 pull back on the whole cell
+  { box: PRINTER_TOP, az: -18, el: 24, fill: 0.68, p: 5 },                     // 7 5b fresh plate into the printer
+  { box: [[-1000,-980,-330],[850,870,1810]], az: -24, el: 9, fill: 0.92, full: true }, // 8 exploded view
+];
+// story key points: [u, shot]; the camera holds between equal shots and eases between different ones
+const KEYS = [[0.55,0],[1.06,1],[1.80,1],[2.06,2],[2.80,2],[3.06,3],[3.80,3],[4.06,4],[4.80,4],[5.04,5],[5.24,5],[5.36,7],[5.56,7],[5.66,6],[5.70,6],[5.76,8],[5.84,8],[5.89,6]];
+const FOCUS_BOX = { 1: SHOT[1].box, 2: SHOT[2].box, 3: [[-510,-500,-20],[0,-20,1520]], 4: [[10,-30,140],[430,330,1110]], 5: BANK_BOX };
+// exploded view: subassemblies drift apart, hold, then snap back (offsets in Onshape axes, metres)
+const EXPLODE = { out: [5.70, 5.76], back: [5.84, 5.89] };
+const easeOutBack = t => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const explodeK = uu => { const a = clamp((uu - EXPLODE.out[0]) / (EXPLODE.out[1] - EXPLODE.out[0]), 0, 1), b = clamp((uu - EXPLODE.back[0]) / (EXPLODE.back[1] - EXPLODE.back[0]), 0, 1);
+  return (1 - Math.pow(1 - a, 3)) * (1 - easeOutBack(b)); };
+const worldBox = b => new THREE.Box3(new THREE.Vector3(...b[0]).multiplyScalar(M), new THREE.Vector3(...b[1]).multiplyScalar(M)).applyMatrix4(model.matrixWorld);
+const corners = box => { const a = []; for (let i = 0; i < 8; i++) a.push(new THREE.Vector3(i&1?box.max.x:box.min.x, i&2?box.max.y:box.min.y, i&4?box.max.z:box.min.z)); return a; };
+const probe = new THREE.PerspectiveCamera(30, 1, 0.01, 100), pv = new THREE.Vector3();
+const dirOf = (az, el) => new THREE.Vector3(Math.sin(degToRad(az))*Math.cos(degToRad(el)), Math.sin(degToRad(el)), Math.cos(degToRad(az))*Math.cos(degToRad(el)));
+function fitShot(s0, region, W, H, fov){
+  const s = (W < 760 && s0.m) ? { ...s0, ...s0.m } : s0;
+  const box = worldBox(s.box), c = box.getCenter(new THREE.Vector3()), pts = corners(box), dir = dirOf(s.az, s.el);
+  const rw = region.x1 - region.x0, rh = region.y1 - region.y0;
+  probe.fov = fov; probe.aspect = W / H; probe.updateProjectionMatrix();
+  let d = 3;
+  for (let k = 0; k < 6; k++){
+    probe.position.copy(c).addScaledVector(dir, d); probe.lookAt(c); probe.updateMatrixWorld();
+    let ex = 0, ey = 0; for (const p of pts){ pv.copy(p).project(probe); ex = Math.max(ex, Math.abs(pv.x)); ey = Math.max(ey, Math.abs(pv.y)); }
+    const sc = Math.max(ex * W / (s.fill * rw), ey * H / (s.fill * rh)); d = Math.max(0.35, d * (1 + (sc - 1) * 0.9));
+  }
+  return { t: c, d, az: s.az, el: s.el, sx: (region.x0 + region.x1) / 2 / W, sy: (region.y0 + region.y1) / 2 / H };
+}
+const CENTER = new THREE.Vector3(-0.077, 0.70, 0.0);
+const tanHalf = fov => Math.tan(degToRad(fov / 2));
+
+// Hero: the whole cell, straight on, in the space beside the copy (coordinates relative to the hero frame).
+function heroShot(W, H, fov){
+  const host = el('heroStage').getBoundingClientRect(), r = heroCopy.getBoundingClientRect();
+  if (W < 760){
+    const top = r.bottom - host.top + 24, avail = Math.max(160, H - top - 24);
+    const D = Math.max(1.75 / (avail / H * 2 * tanHalf(fov)), 1.10 * H / ((W - 40) * 2 * tanHalf(fov)));
+    return { t: CENTER.clone(), d: D + 0.5, az: 0, el: 0, sx: 0.5, sy: (top + avail / 2) / H };
+  }
+  const left = r.right - host.left + 56, right = W - Math.max(32, (W - 1200) / 2 - 40), free = Math.max(160, right - left);
+  const D = Math.max(1.75 / (0.74 * 2 * tanHalf(fov)), 1.10 * H / (free * 0.9 * 2 * tanHalf(fov)));
+  return { t: CENTER.clone(), d: D + 0.5, az: 0, el: 0, sx: (left + right) / 2 / W, sy: 0.5 + 28 / H };
+}
+const lerpPose = (A, B, t) => ({ t: A.t.clone().lerp(B.t, t), d: lerp(A.d, B.d, t), az: lerp(A.az, B.az, t), el: lerp(A.el, B.el, t), sx: lerp(A.sx, B.sx, t), sy: lerp(A.sy, B.sy, t) });
+function poseAt(uu, POSES){
+  if (uu <= KEYS[0][0]) return POSES[KEYS[0][1]];
+  for (let k = 0; k < KEYS.length - 1; k++){
+    const [ua, ia] = KEYS[k], [ub, ib] = KEYS[k+1];
+    if (uu <= ub){ const A = POSES[ia], B = POSES[ib]; if (ia === ib) return A; const t = ease(clamp((uu - ua) / (ub - ua), 0, 1));
+      return lerpPose(A, B, t); }
+  }
+  return POSES[KEYS[KEYS.length-1][1]];
+}
+
+
+// ---------- the printed part: the WorkCell mark, lying flat on the plate ----------
+/*LOGO*/
+const PART = { size: 0.20, height: 0.010, cx: -0.322, cy: -0.19, z0: 0.6855 };
+function logoShapes(){
+  return LOGO.map(s => { const sh = new THREE.Shape(s.o.map(([x,y]) => new THREE.Vector2(x*PART.size, y*PART.size)));
+    s.h.forEach(h => sh.holes.push(new THREE.Path(h.map(([x,y]) => new THREE.Vector2(x*PART.size, y*PART.size))))); return sh; });
+}
+function layerTexture(){
+  const c = document.createElement('canvas'); c.width = 4; c.height = 8; const g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0,0,4,8); g.fillStyle = '#c9cbc6'; g.fillRect(0,6,4,2);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace;
+  t.repeat.set(1, 1/0.0002); return t;
+}
+
+// ---------- load the WorkCell ----------
+const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+const loadBar = el('loadBar'), loadTxt = el('loadTxt'), loaderEl = el('loader');
+let rig = null, loadedAt = 0;
+const nameOf = o => (o.userData && o.userData.name) || o.name || '';
+const findByName = (r, n) => { let f = null; r.traverse(o => { if (!f && nameOf(o) === n) f = o; }); return f; };
+async function fetchModel(){
+  const res = await fetch('wc-model.txt'); if (!res.ok) throw new Error('HTTP ' + res.status);
+  const total = +res.headers.get('content-length') || 0; const reader = res.body.getReader(); const chunks = []; let got = 0;
+  for (;;){ const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.length;
+    if (total){ const p = Math.round(100*got/total); loadBar.style.setProperty('--p', p + '%'); loadTxt.textContent = `Loading model ${p}%`; } }
+  const text = new TextDecoder().decode(await new Blob(chunks).arrayBuffer());
+  const bin = atob(text.trim()); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+fetchModel().then(buf => new Promise((ok, fail) => loader.parse(buf, '', ok, fail))).then(gltf => {
+  const gscene = gltf.scene; model.add(gscene);
+  const seen = new Set();
+  gscene.traverse(o => {
+    if (!o.isMesh || !o.material || seen.has(o.material)) return; const m = o.material; seen.add(m);
+    const name = m.name || ''; m.color.convertSRGBToLinear();
+    const hsl = {}; m.color.getHSL(hsl);
+    if (name.startsWith('0.400000_0.400000_0.400000')){ m.metalness = 0.55; m.roughness = 0.42; }
+    else if (name.startsWith('0.588235_0.972549_1.0')){ m.metalness = 0.0; m.roughness = 0.6; }
+    else if (name.startsWith('0.792157_0.819608_0.93')||name.startsWith('0.776471')||name.startsWith('0.639216')){ m.metalness = 0.8; m.roughness = 0.3; }
+    else if (hsl.s < 0.12){ m.metalness = 0.12; m.roughness = 0.62; }
+    else { m.metalness = 0.0; m.roughness = 0.5; }
+  });
+  gscene.traverse(o => { if (nameOf(o) === 'Enclosure Doors <1>') o.visible = false; });
+  { const top = findByName(gscene, 'Printer 1 <2>'); if (top) top.traverse(o => { if (/^(occurrence of )?300mm plate$/.test(nameOf(o))) o.visible = false; }); }
+  model.updateMatrixWorld(true);
+  const cart = findByName(gscene, 'V2 Gantry Cart <2>'), pnp = cart && findByName(cart, 'Pick & Place V2.1 <1>');
+  const pA = pnp && findByName(pnp, '310mm Plate w/ Mate <1>'), pB = findByName(gscene, '310mm Plate w/ Mate <15>');
+  if (!cart || !pnp || !pA || !pB){ loadTxt.textContent = 'Model parts not found'; return; }
+  model.attach(cart); cart.attach(pnp);
+  const arm = new THREE.Group(); pnp.add(arm);
+  const inv = new THREE.Matrix4().copy(model.matrixWorld).invert();
+  for (const c of [...pnp.children]){ if (c === arm || nameOf(c).includes('Plate w/ Mate')) continue;
+    const b = new THREE.Box3().setFromObject(c); if (b.isEmpty()) continue; b.applyMatrix4(inv);
+    const cy = (b.min.y + b.max.y)/2, sy = b.max.y - b.min.y; if (cy > -0.445 && cy < -0.375 && sy < 0.12) arm.attach(c); }
+  const gantry = findByName(gscene, 'V2 Gantry <1>');
+  if (gantry) for (const c of [...gantry.children]){
+    if (!/Logo Insert|Sinch|MGN15 Config/.test(nameOf(c))) continue;
+    const b = new THREE.Box3().setFromObject(c); if (b.isEmpty()) continue; b.applyMatrix4(inv);
+    const cy = (b.min.y + b.max.y)/2, cz = (b.min.z + b.max.z)/2;
+    if (cz > 0.58 && cz < 0.72 && cy < -0.375 && cy > -0.46) arm.attach(c);
+    else if (cz > 0.58 && cz < 0.72 && cy < -0.1) pnp.attach(c);
+    else cart.attach(c);
+  }
+  const carryA = new THREE.Group(), carryB = new THREE.Group(); model.add(carryA, carryB); carryA.attach(pA); carryB.attach(pB);
+  const shapes = logoShapes();
+  const geo = new THREE.ExtrudeGeometry(shapes, { depth: PART.height, bevelEnabled: false, curveSegments: 4 });
+  const clip = new THREE.Plane(new THREE.Vector3(0,-1,0), 10);
+  const pla = new THREE.Color('#2CDB1A');
+  const capMat = new THREE.MeshStandardMaterial({ color: pla, roughness: 0.55, metalness: 0, clippingPlanes: [clip] });
+  const sideMat = new THREE.MeshStandardMaterial({ color: pla, roughness: 0.6, metalness: 0, map: layerTexture(), clippingPlanes: [clip], side: THREE.DoubleSide });
+  const part = new THREE.Mesh(geo, [capMat, sideMat]); part.position.set(PART.cx, PART.cy, PART.z0); carryA.add(part);
+  const layer = new THREE.Mesh(new THREE.ShapeGeometry(shapes, 4), new THREE.MeshBasicMaterial({ color: '#c9ffbd', transparent: true, opacity: 0.95 }));
+  layer.position.set(PART.cx, PART.cy, PART.z0); carryA.add(layer);
+  // exploded view: each top-level subassembly gets a direction to drift (Onshape axes, metres)
+  const PRN = [-0.22,-0.05,0], SHELF = [0.24,0.02,0];
+  const DIR = [
+    [/^Printer 1 <2>$/, [-0.22,-0.05,0.10]], [/^Printer 1 <1>$/, [-0.22,-0.05,-0.06]], [/^Printer Plates/, PRN],
+    [/^Right Panel/, [0.40,0,0]], [/^Left Panel/, [-0.42,0,0]], [/^Linear Actuator|^occurrence of Part 1$/, [-0.34,0,0]],
+    [/^Printer Side Panel/, [0,0.26,0]], [/^Shelf Back Panel/, [0.06,0.38,0]], [/^Base and Wheels/, [0,0,-0.20]],
+    [/^occurrence of Top Panel/, [0,0,0.28]], [/^V2 Gantry <1>$/, [0,-0.26,0.02]],
+  ];
+  const parts = [];
+  const mainNode = findByName(gscene, 'Main') || gscene;
+  for (const c of mainNode.children){
+    const nm = nameOf(c);
+    if (/^Full Shelf/.test(nm)){ // shelf column goes right; the printer base plates inside it follow the printers
+      for (const k of c.children){ const b = new THREE.Box3().setFromObject(k); if (b.isEmpty()) continue; b.applyMatrix4(inv);
+        parts.push({ o: k, base: k.position.clone(), off: new THREE.Vector3(...((b.min.x + b.max.x) / 2 < 0 ? PRN : SHELF)) }); }
+      continue;
+    }
+    const d = DIR.find(([re]) => re.test(nm)); if (d) parts.push({ o: c, base: c.position.clone(), off: new THREE.Vector3(...d[1]) });
+  }
+  rig = { cart, pnp, arm, carryA, carryB, part, layer, clip, parts, xCart: new THREE.Vector3(0,-0.48,0), xA: new THREE.Vector3(...SHELF), xB: new THREE.Vector3(-0.22,-0.05,0.10),
+          base: { cart: cart.position.clone(), pnp: pnp.position.clone(), arm: arm.position.clone() } };
+  loadedAt = performance.now(); stillQueue.push(...STILLS);
+  loaderEl.classList.add('gone');
+}).catch(err => { loadTxt.textContent = 'Model failed to load'; console.error(err); });
+
+const wp = new THREE.Vector3();
+function setRig(uu, now){
+  const s = state(uu), xk = explodeK(uu);
+  for (const q of rig.parts) q.o.position.copy(q.base).addScaledVector(q.off, xk);
+  rig.cart.position.set(rig.base.cart.x + s.dx, rig.base.cart.y, rig.base.cart.z).addScaledVector(rig.xCart, xk);
+  rig.pnp.position.set(rig.base.pnp.x, rig.base.pnp.y, rig.base.pnp.z + s.dz);
+  rig.arm.position.set(rig.base.arm.x, rig.base.arm.y + s.ay, rig.base.arm.z);
+  rig.carryA.position.copy(plateOffset(plateA, uu)); if (uu < plateA.from) rig.carryA.position.z += 0.002;
+  rig.carryB.position.copy(uu < plateB.from ? new THREE.Vector3() : plateOffset(plateB, uu));
+  if (xk){ rig.carryA.position.addScaledVector(rig.xA, xk); rig.carryB.position.addScaledVector(rig.xB, xk); }
+  const pr = clamp((uu - PRINT[0]) / (PRINT[1] - PRINT[0]), 0, 1);
+  const layers = Math.round(PART.height / 0.0002), h = (Math.floor(pr * layers) / layers) * PART.height;
+  model.updateMatrixWorld(true);
+  rig.part.getWorldPosition(wp);
+  rig.clip.constant = pr >= 1 ? 99 : wp.y + h + 0.00001;
+  rig.part.visible = pr > 0;
+  rig.layer.visible = pr > 0 && pr < 1 && h > 0;
+  rig.layer.position.z = PART.z0 + h + 0.0002;
+  rig.layer.material.opacity = 0.55 + 0.4 * Math.abs(Math.sin(now / 160));
+}
+
+
+// ---------- stills from the same scene: the video poster and the benefit tiles ----------
+const STILLS = [
+  { id: 'player', poster: true, u: 0, W: 1600, H: 900, fov: 26, bg: BG, region: { x0: 780, x1: 1540, y0: 50, y1: 860 }, shot: { box: WHOLE, az: -30, el: 6, fill: 0.9 } },
+  { id: 'img-night', u: 1.66, shot: { box: [[-440,-40,800],[-80,330,1010]], az: -14, el: 32, fill: 0.86 } },
+  { id: 'img-swap', u: 5.47, shot: { box: PRINTER_TOP, az: -24, el: 22, fill: 0.86 } },
+  { id: 'img-price', u: 0, shot: { box: WHOLE, az: -30, el: 8, fill: 1.12 } },
+  { id: 'img-slot', u: 4.30, shot: { box: [[10,-60,300],[430,330,1000]], az: 30, el: 14, fill: 0.9 } },
+  { id: 'img-foot', u: 0, shot: { box: WHOLE, az: 38, el: 30, fill: 1.05 } },
+];
+const stillQueue = [];
+function snapshot(def, now){
+  const W = def.W || 960, H = def.H || 600, fov = def.fov || 28, region = def.region || { x0: 24, x1: W - 24, y0: 24, y1: H - 24 };
+  renderer.setPixelRatio(1); renderer.setSize(W, H, false);
+  const pc = new THREE.PerspectiveCamera(fov, W / H, 0.05, 50);
+  const P = fitShot(def.shot, region, W, H, fov);
+  pc.position.copy(P.t).addScaledVector(dirOf(P.az, P.el), P.d);
+  if (P.el > 80) pc.up.set(0, 0, -1);
+  pc.lookAt(P.t);
+  pc.setViewOffset(W, H, (0.5 - P.sx) * W, (0.5 - P.sy) * H, W, H);
+  setRig(def.u, now); rigU = def.u;
+  scene.background = def.bg || TILE_BG; renderer.render(scene, pc); scene.background = null;
+  const url = canvas.toDataURL('image/jpeg', 0.86);
+  renderer.setPixelRatio(DPR); resize();
+  return url;
+}
+
+// ---------- app-flow demo: a looping animation (not tied to scroll) ----------
+const flowSec = el('software'), steps = [...flowSec.querySelectorAll('.step')], tracks = steps.map(s => s.querySelector('.track'));
+const fileEl = el('file'), dropEl = el('drop');
+const LOOP = [2.6, 2.6, 2.2, 4.6, 3.6];
+const LOOP_T = LOOP.reduce((a, b) => a + b, 0);
+let flowVisible = false, flowT0 = performance.now(), lastStep = -1;
+new IntersectionObserver(es => { for (const e of es){ if (e.isIntersecting && !flowVisible) flowT0 = performance.now(); flowVisible = e.isIntersecting; } }, { threshold: 0.2 }).observe(flowSec);
+const fmtMin = m => m >= 60 ? `${Math.floor(m/60)} h ${String(Math.round(m%60)).padStart(2,'0')} m` : `${Math.round(m)} m`;
+function flowTick(now){
+  let t = ((now - flowT0) / 1000) % LOOP_T, s = 0;
+  while (s < 4 && t >= LOOP[s]){ t -= LOOP[s]; s++; }
+  const lp = clamp(t / LOOP[s], 0, 1);
+  if (s !== lastStep){
+    steps.forEach((st, i) => st.classList.toggle('on', i === s));
+    ['c-upload','c-slice','c-queue','c-print'].forEach((id, i) => el(id).classList.toggle('hot', i === Math.min(s, 3)));
+    el('toast').classList.toggle('on', s === 4); lastStep = s;
+  }
+  tracks.forEach((tr, i) => { tr.style.height = i === s ? `calc((100% - 32px) * ${lp.toFixed(3)})` : '0'; });
+  const fp = s === 0 ? ease(clamp((lp - 0.15) / 0.6, 0, 1)) : 1;
+  const dw = dropEl.clientWidth, dh = dropEl.clientHeight, fw = fileEl.offsetWidth, fh = fileEl.offsetHeight;
+  fileEl.style.transform = `translate(${(dw-fw)/2 + (1-fp)*dw*0.9}px, ${(dh-fh)/2 - (1-fp)*dh*0.9}px) rotate(${(1-fp)*-8}deg)`;
+  fileEl.style.opacity = s === 0 ? Math.min(1, lp * 5) : s >= 2 ? 0.4 : 1;
+  el('dropTxt').style.opacity = fp > 0.6 ? 0 : 1;
+  const sp = s < 1 ? 0 : s === 1 ? ease(Math.min(1, lp * 1.2)) : 1;
+  el('sliceBar').style.width = (sp*100).toFixed(1) + '%';
+  el('sliceState').textContent = s < 1 ? 'Waiting' : sp < 1 ? `Slicing ${Math.round(sp*100)}%` : 'Done · 1 h 12 m';
+  const qp = s < 2 ? 0 : s === 2 ? ease(Math.min(1, lp * 2.5)) : 1, mine = el('mine');
+  mine.style.opacity = qp; mine.style.transform = `translateY(${(1-qp)*10}px)`;
+  el('q0').style.display = s >= 3 ? 'none' : '';
+  el('qCount').textContent = s === 2 && qp > 0.5 ? '3 jobs' : '2 jobs';
+  const pp = s < 3 ? 0 : s === 3 ? Math.min(1, lp * 1.08) : 1;
+  el('printBar').style.width = (pp*100).toFixed(1) + '%';
+  el('printState').textContent = s < 3 ? 'Printing gripper_jaw' : pp < 1 ? 'Printing bracket_v4' : 'Done';
+  el('printPct').textContent = Math.round(pp * 100) + '%';
+  el('printEta').textContent = pp >= 1 ? 'Moving to shelf 7' : fmtMin(72 * (1 - pp));
+}
+
+
+// ---------- calculator ----------
+const fmtMoney = n => '$' + Math.round(n).toLocaleString('en-US');
+const fmtNum = n => Math.round(n).toLocaleString('en-US');
+const OPEN = 9;
+function simulate(L, S, workcell){
+  const R = 0.25, SWAP = 1/60, CAP = 7.5;
+  const staffed = t => { const d = Math.floor(t/24) % 7, h = t % 24; return S > 0 && d < 5 && h >= OPEN && h < OPEN + S; };
+  const nextOpen = t => { if (S <= 0) return Infinity; for (let k = 0; k < 8; k++){ const day = Math.floor(t/24) + k; if (day % 7 < 5){ const o = day*24 + OPEN; if (o + S > t) return Math.max(o, t); } } return Infinity; };
+  let t = OPEN, busy = 0, plates = 0; const start = 168, end = 168*4, runs = [];
+  while (t < end){
+    const f = t + L; busy += Math.max(0, Math.min(f, end) - Math.max(t, start));
+    const a = Math.max(t, 168), b = Math.min(f, 336);   // week 2 is the one drawn
+    if (b > a){ const last = runs[runs.length - 1]; if (last && (a - 168) - last[1] < 0.3) last[1] = b - 168; else runs.push([a - 168, b - 168]); }   // short hand-offs (≤ 18 min) draw as one block
+    let next;
+    if (!workcell) next = staffed(f) ? f + R : nextOpen(f) + R;
+    else { if (staffed(f)) plates = 0; plates++; next = (plates < CAP || staffed(f)) ? f + SWAP : (plates = 0, nextOpen(f) + R); }
+    if (!isFinite(next)) break; t = next;
+  }
+  return { busy: busy / 3, runs };
+}
+// Each week strip is one path of solid runs (printing time); gaps are hours the printer sits idle.
+function buildWeek(svg, h1){
+  let h = `<rect class="bg" x="0" y="0" width="168" height="${h1}"/>`;
+  for (let d = 1; d < 7; d++) h += `<rect class="day" x="${d*24-0.08}" y="0" width="0.16" height="${h1}"/>`;
+  svg.innerHTML = h + '<path class="run" d=""/>';
+  return { path: svg.querySelector('.run'), h: h1 };
+}
+const wkMan = buildWeek(el('wk-man'), 10), wkWc = buildWeek(el('wk-wc'), 10), wkLab = buildWeek(el('wk-lab'), 1);
+const paint = (w, runs) => { w.path.setAttribute('d', runs.map(([a, b]) => `M${a.toFixed(3)} 0H${b.toFixed(3)}V${w.h}H${a.toFixed(3)}Z`).join('')); };
+const labRuns = S => { const r = []; for (let d = 0; d < 5; d++) r.push([d*24 + OPEN, d*24 + OPEN + S]); return r; };
+function fillRange(r, v){ r.style.setProperty('--fill', (((v ?? +r.value) - r.min) / (r.max - r.min) * 100) + '%'); }
+
+// The inputs ease toward their targets and the whole result is recomputed every frame, so switching a preset
+// or dragging a slider morphs the charts and numbers instead of snapping. Displayed values are rounded.
+const CIN = { n: el('c-n'), L: el('c-l'), S: el('c-h') };
+const snapTo = { n: v => Math.round(v), L: v => Math.round(v * 2) / 2, S: v => Math.round(v) };
+const cTarget = { n: +CIN.n.value, L: +CIN.L.value, S: +CIN.S.value }, cCur = { ...cTarget };
+let calcRaf = 0, calcLast = 0, gliding = false;
+function renderCalc(c){
+  const nR = snapTo.n(c.n), LR = snapTo.L(c.L), SR = snapTo.S(c.S);
+  el('o-n').innerHTML = nR; el('o-l').innerHTML = (LR % 1 ? LR.toFixed(1) : LR) + '<small>h</small>'; el('o-h').innerHTML = SR + '<small>h/day</small>';
+  const man = simulate(c.L, c.S, false), wc = simulate(c.L, c.S, true);
+  paint(wkMan, man.runs); paint(wkWc, wc.runs); paint(wkLab, labRuns(c.S));
+  const idle = (168 - man.busy) * c.n, backH = Math.max(0, wc.busy - man.busy) * c.n, extra = backH / c.L;
+  el('h-n').textContent = nR === 1 ? 'printer sits' : `${nR} printers sit`;
+  el('h-idle').textContent = fmtNum(idle); el('h-back').textContent = fmtNum(backH);
+  el('r-idle').textContent = fmtNum(idle); el('r-back').textContent = fmtNum(backH); el('r-extra').textContent = fmtNum(extra);
+  el('u-man-t').textContent = Math.round(man.busy / 168 * 100) + '%'; el('u-wc-t').textContent = Math.round(wc.busy / 168 * 100) + '%';
+  // the comparison table's last row follows the printer count
+  const cells = Math.ceil(nR/2), arrays = Math.ceil(nR/4);
+  el('t-n').textContent = nR === 1 ? '1 printer' : `${nR} printers`;
+  el('t-wc').textContent = fmtMoney(cells*5000); el('t-mos').textContent = fmtMoney(arrays*80000);
+  el('t-wc-s').textContent = `${cells} ${cells === 1 ? 'cell' : 'cells'}, printers included`;
+  el('t-mos-s').textContent = `${arrays} ${arrays === 1 ? 'Array' : 'Arrays'}`;
+  el('t-hob').textContent = `${fmtMoney(nR*80)}–${fmtMoney(nR*129)}`;
+}
+function calcStep(now){
+  const dt = Math.min(0.05, (now - calcLast) / 1000); calcLast = now;
+  const k = reduce ? 1 : 1 - Math.exp(-dt * (gliding ? 6.5 : 18));
+  let moving = false;
+  for (const key in cCur){ const d = cTarget[key] - cCur[key];
+    if (Math.abs(d) > 0.004){ cCur[key] += d * k; moving = true; } else cCur[key] = cTarget[key];
+    if (gliding){ CIN[key].value = cCur[key]; } fillRange(CIN[key], gliding ? cCur[key] : undefined); }
+  renderCalc(cCur);
+  if (moving) calcRaf = requestAnimationFrame(calcStep);
+  else { calcRaf = 0; gliding = false; for (const key in CIN){ CIN[key].value = cTarget[key]; fillRange(CIN[key]); } }
+}
+function kickCalc(){ if (!calcRaf){ calcLast = performance.now(); calcRaf = requestAnimationFrame(calcStep); } }
+function syncChips(){ const keyStr = [cTarget.n, cTarget.L, cTarget.S].join(','); document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.p === keyStr)); }
+for (const key in CIN){
+  CIN[key].step = 'any';   // the thumb moves freely; the value snaps to whole printers, half hours and whole hours
+  CIN[key].addEventListener('input', () => { gliding = false; cTarget[key] = snapTo[key](+CIN[key].value); fillRange(CIN[key]); syncChips(); kickCalc(); });
+  CIN[key].addEventListener('change', () => { gliding = true; kickCalc(); });
+}
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  const [n, L, S] = c.dataset.p.split(',').map(Number); Object.assign(cTarget, { n, L, S }); gliding = true; syncChips(); kickCalc();
+}));
+syncChips(); for (const key in CIN) fillRange(CIN[key]); renderCalc(cCur);
+
+// comparison checkmarks
+const CK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"/></svg>';
+document.querySelectorAll('.ck').forEach(s => { s.innerHTML = CK + '<span>' + s.textContent.replace(/^CK\s*/, '') + '</span>'; });
+
+
+// ---------- reveal on scroll ----------
+{
+  const items = [...document.querySelectorAll('.reveal')];
+  // stagger siblings in the same grid
+  for (const g of document.querySelectorAll('.nums .grid, .awards')) [...g.children].forEach((c, i) => c.style.setProperty('--d', (i * 70) + 'ms'));
+  if (reduce) items.forEach(x => x.classList.add('in'));
+  else { const io = new IntersectionObserver(es => { for (const e of es) if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    items.forEach(x => io.observe(x)); }
+}
+
+
+// ---------- launch video ----------
+// On any normal host this is a standard YouTube embed and plays inline. Claude's artifact preview refuses frames
+// from other sites (the request never leaves the browser), so there it plays a copy of the file if one is attached,
+// or says plainly what's going on instead of showing a blank frame.
+const YT_ID = '6d8gg3khpiE';
+const VIDEO_FILE = '';   // optional: URL of an MP4 copy, used only inside Claude's preview
+const inClaudePreview = /(^|\.)claude\.ai$|claudeusercontent\.com$|anthropic\.com$/.test(location.hostname);
+el('playBtn').addEventListener('click', () => {
+  const player = el('player');
+  if (inClaudePreview && VIDEO_FILE){
+    const v = document.createElement('video'); v.src = VIDEO_FILE; v.controls = true; v.autoplay = true; v.playsInline = true;
+    v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:3;background:#000'; player.append(v); return;
+  }
+  if (inClaudePreview){ player.classList.add('blocked'); el('vidAlt').hidden = false; return; }
+  const f = document.createElement('iframe');
+  f.src = `https://www.youtube-nocookie.com/embed/${YT_ID}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+  f.title = 'The WorkCell launch video'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true;
+  player.append(f);
+});
+
+
+el('watchBtn').addEventListener('click', e => {
+  e.preventDefault();
+  el('video').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+  if (!inClaudePreview) setTimeout(() => el('playBtn').click(), reduce ? 0 : 700);
+});
+
+// ---------- the tour: Print → Pick → Move → Store → Swap ----------
+const TOUR = [
+  { name: 'Print', u: [1.00, 1.70], dur: 4.2, d: 'Two Vorons build on magnetic plates, 300 × 300 mm, with 4 kg of filament each.' },
+  { name: 'Pick', u: [1.74, 2.68], dur: 4.4, d: 'The camera lines up on an AprilTag to 0.2 mm, then the claw slides on, lifts and pulls the plate.' },
+  { name: 'Move', u: [2.68, 3.92], dur: 3.6, d: 'The column glides on belts while a ball screw lifts the plate to its shelf.' },
+  { name: 'Store', u: [3.92, 4.60], dur: 3.2, d: 'Each print gets a slot sized to its height, and the owner gets a Discord ping.' },
+  { name: 'Swap', u: [4.60, 5.60], dur: 5.4, d: 'A clean plate from the bank goes onto the printer, and the next job starts in under 60 s.' },
+];
+const tstepsEl = el('tsteps');
+TOUR.forEach((s, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tstep';
+  b.innerHTML = `<i class="track"></i><strong><small>0${i+1}</small>${s.name}</strong><span class="d">${s.d}</span>`;
+  b.addEventListener('click', () => goStep(i, true)); tstepsEl.append(b); });
+const tbtns = [...tstepsEl.children], ttracks = tbtns.map(b => b.querySelector('.track'));
+const tour = { i: 0, t: 0, playing: !reduce, u: TOUR[0].u[0], fly: null };
+let lastPose = null, dipUntil = 0;
+function goStep(i, user){
+  if (lastPose) tour.fly = { from: lastPose, t: 0 };
+  const jump = i !== (tour.i + 1) % TOUR.length || i === 0 || user;
+  if (jump) dipUntil = performance.now() + 180;
+  tour.i = i; tour.t = 0; if (user && !reduce) setPlaying(true);
+  tbtns.forEach((b, k) => b.classList.toggle('on', k === i));
+}
+function setPlaying(p){
+  tour.playing = p; el('tourPP').setAttribute('aria-label', p ? 'Pause the tour' : 'Play the tour');
+  el('ppIco').innerHTML = p ? '<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>' : '<path d="M8 5v14l11-7z"/>';
+}
+el('tourPP').addEventListener('click', () => setPlaying(!tour.playing));
+goStep(0, false); tour.fly = null; dipUntil = 0;
+function tourTick(dt){
+  const s = TOUR[tour.i];
+  if (tour.playing) tour.t += dt;
+  if (reduce) tour.t = s.dur;
+  const p = clamp(tour.t / s.dur, 0, 1);
+  tour.u = lerp(s.u[0], s.u[1], p);
+  ttracks.forEach((tr, k) => { tr.style.height = k === tour.i ? `calc((100% - 38px) * ${p.toFixed(3)})` : '0'; });
+  if (tour.playing && tour.t > s.dur + 0.7) goStep((tour.i + 1) % TOUR.length, false);
+  if (tour.fly) tour.fly.t += dt;
+}
+
+// ---------- one canvas, drawn in whichever frame is on screen (hero or tour) ----------
+const hosts = { hero: el('heroStage'), tour: el('tourStage') };
+const seen = { hero: true, tour: false };
+let host = 'hero', HERO_POSE = null, TPOSES = [];
+new IntersectionObserver(es => { for (const e of es){ seen[e.target === hosts.hero ? 'hero' : 'tour'] = e.isIntersecting; } pickHost(); }, { threshold: 0 }).observe(hosts.hero);
+new IntersectionObserver(es => { for (const e of es){ seen[e.target === hosts.hero ? 'hero' : 'tour'] = e.isIntersecting; } pickHost(); }, { threshold: 0 }).observe(hosts.tour);
+function pickHost(){
+  const want = seen.tour ? 'tour' : seen.hero ? 'hero' : null;
+  if (!want || want === host) return;
+  host = want; hosts[host].append(canvas); resize(); dipUntil = performance.now() + 120;
+  if (host === 'tour'){ tour.fly = null; lastPose = null; }
+}
+function resize(){
+  const h = hosts[host], W = Math.max(1, h.clientWidth), H = Math.max(1, h.clientHeight);
+  renderer.setSize(W, H, false);
+  camera.aspect = W / H; camera.fov = W < 760 ? 38 : 30; camera.updateProjectionMatrix();
+  if (host === 'hero') HERO_POSE = heroShot(W, H, camera.fov);
+  else { TPOSES = SHOT.map((s, i) => i === 0 ? null : fitShot(s, { x0: 20, x1: W - 20, y0: 20, y1: H - 20 }, W, H, camera.fov)); TPOSES[0] = TPOSES[1]; }
+}
+addEventListener('resize', resize); resize();
+document.fonts && document.fonts.ready.then(resize);
+addEventListener('scroll', () => { bar.classList.toggle('scrolled', scrollY > 40); }, { passive: true });
+
+// gentle tilt toward the pointer on the hero
+const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
+el('hero').addEventListener('pointermove', e => { tilt.tx = (e.clientX / innerWidth - 0.5) * 2; tilt.ty = (e.clientY / innerHeight - 0.5) * 2; });
+el('hero').addEventListener('pointerleave', () => { tilt.tx = tilt.ty = 0; });
+
+const dotsHot = el('dotsHot'), hotOn = matchMedia('(hover: hover) and (pointer: fine)').matches && !reduce;
+const hot = { x: -999, y: -999, tx: -999, ty: -999, a: 0, t: 0, inside: false };
+if (hotOn){
+  addEventListener('pointermove', e => { hot.tx = e.clientX; hot.ty = e.clientY; if (hot.x < -900){ hot.x = hot.tx; hot.y = hot.ty; } hot.t = performance.now(); hot.inside = true; }, { passive: true });
+  document.documentElement.addEventListener('pointerleave', () => { hot.inside = false; });
+}
+
+let lastNow = performance.now(), rigU = -1;
+const camPos = new THREE.Vector3();
+function frame(now){
+  const dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
+  if (rig && stillQueue.length){ const d = stillQueue.shift(), url = snapshot(d, now);
+    if (d.poster) el('player').style.setProperty('--poster', `url(${url})`); else el(d.id).style.backgroundImage = `url(${url})`; }
+  const W = hosts[host].clientWidth, H = hosts[host].clientHeight;
+  let P = null;
+  if (host === 'hero' && HERO_POSE){
+    const k = 1 - Math.exp(-dt * 4); tilt.x += (tilt.tx - tilt.x) * k; tilt.y += (tilt.ty - tilt.y) * k;
+    P = { ...HERO_POSE, az: tilt.x * 7, el: tilt.y * 3 };
+    if (rig && rigU !== 0){ setRig(0, now); rigU = 0; }
+  } else if (host === 'tour' && TPOSES.length){
+    tourTick(dt);
+    P = poseAt(tour.u, TPOSES);
+    if (tour.fly){ const f = clamp(tour.fly.t / 0.9, 0, 1); P = lerpPose(tour.fly.from, P, ease(f)); if (f >= 1) tour.fly = null; }
+    lastPose = P;
+    if (rig){ setRig(tour.u, now); rigU = tour.u; }
+  }
+  if (P){
+    camPos.copy(P.t).addScaledVector(dirOf(P.az, P.el), P.d);
+    camera.position.copy(camPos); camera.up.set(0, 1, 0); camera.lookAt(P.t);
+    camera.setViewOffset(W, H, (0.5 - P.sx) * W, (0.5 - P.sy) * H, W, H);
+    camera.updateMatrixWorld();
+  }
+  const loadA = loadedAt ? (reduce ? 1 : smoothstep(now - loadedAt, 0, 900)) : 0;
+  canvas.style.opacity = (now < dipUntil ? 0.15 : loadA).toFixed(3);
+  if (rig && P && (seen[host])) renderer.render(scene, camera);
+
+  // dot grid: slight drift with scroll, brighter around the cursor
+  dotsEl.style.backgroundPosition = dotsHot.style.backgroundPosition = `0 ${(-scrollY * 0.06).toFixed(1)}px`;
+  if (hotOn){
+    const k = 1 - Math.exp(-dt * 12); hot.x += (hot.tx - hot.x) * k; hot.y += (hot.ty - hot.y) * k;
+    hot.a += ((now - hot.t < 1600 && hot.inside ? 1 : 0) - hot.a) * (1 - Math.exp(-dt * 5));
+    dotsHot.style.setProperty('--mx', hot.x.toFixed(0) + 'px'); dotsHot.style.setProperty('--my', (hot.y + 40).toFixed(0) + 'px');
+    dotsHot.style.opacity = hot.a.toFixed(3);
+  }
+  if (flowVisible || lastStep < 0) flowTick(now);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// spec sheet: a plain download link on normal hosts; inside Claude's viewer the file goes through its download prompt
+document.querySelector('.dl').addEventListener('click', async e => {
+  if (!(window.claude && window.claude.use)) return;
+  e.preventDefault();
+  try {
+    const dl = await window.claude.use('downloads'); if (!dl) return;
+    const blob = await (await fetch('workcell-spec-sheet.pdf')).blob();
+    await dl.save({ filename: 'WorkCell-spec-sheet.pdf', data: blob });
+  } catch (err) { /* declined or unavailable: nothing to do */ }
+});
+
+// waitlist forms: POST to /api/waitlist (a Cloudflare worker that stores sign-ups in D1).
+// Claude's preview has no backend, so there the forms only say so.
+async function joinWaitlist(data){
+  if (inClaudePreview) return { ok: false, msg: 'This preview can’t save sign-ups. The live site will.' };
+  try {
+    const r = await fetch('/api/waitlist', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? { ok: true } : { ok: false, msg: j.error || 'Something went wrong. Try again in a minute.' };
+  } catch { return { ok: false, msg: 'Couldn’t reach the server. Check your connection and try again.' }; }
+}
+const DONE = 'You’re on the list. We’ll email you when kits open.';
+for (const f of document.querySelectorAll('.bandform')) f.addEventListener('submit', async e => {
+  e.preventDefault(); const inp = f.querySelector('input[type=email]'), note = f.querySelector('.bandnote'), btn = f.querySelector('button');
+  if (!inp.value || !inp.checkValidity()){ note.textContent = 'Add a valid email address.'; inp.focus(); return; }
+  btn.disabled = true; note.textContent = 'Joining…';
+  const res = await joinWaitlist({ email: inp.value, website: f.querySelector('.hp').value, source: 'band' });
+  btn.disabled = false; note.textContent = res.ok ? DONE : res.msg; if (res.ok) inp.value = '';
+});
+el('waitForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = el('waitForm'), email = el('w-email'), note = el('waitNote'), btn = f.querySelector('button[type=submit]');
+  if (!email.value || !email.checkValidity()){ note.classList.remove('ok'); note.textContent = 'Add a valid email address to join the waitlist.'; email.focus(); return; }
+  btn.disabled = true; note.classList.remove('ok'); note.textContent = 'Joining…';
+  const res = await joinWaitlist({ email: email.value, name: el('w-name').value, type: el('w-type').value, printers: el('w-printers').value, message: el('w-msg').value, website: f.querySelector('.hp').value, source: 'form' });
+  btn.disabled = false;
+  if (res.ok){ note.classList.add('ok'); note.textContent = DONE; f.reset(); } else note.textContent = res.msg;
+});
+</script>

@@ -1,0 +1,7 @@
+/wc-model.txt
+  Cache-Control: public, max-age=86400
+/workcell-spec-sheet.pdf
+  Content-Disposition: attachment; filename="WorkCell-spec-sheet.pdf"
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
