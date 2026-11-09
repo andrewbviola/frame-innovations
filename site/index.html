@@ -54,9 +54,17 @@ h2{text-wrap:balance;font-weight:500;letter-spacing:-.03em}
 .bar .spacer{flex:1}
 .cta{font:600 14px/1 var(--display);color:var(--on-accent);background:var(--accent);border:0;border-radius:999px;padding:12px 18px;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:filter .2s, transform .2s}
 .cta:hover{filter:brightness(1.08)}
+.cta.alt{background:transparent;color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2);transition:box-shadow .2s, background .2s}
+.cta.alt:hover{filter:none;background:rgba(236,237,230,.05);box-shadow:inset 0 0 0 1px rgba(236,237,230,.35)}
+.cta .ext{width:11px;height:11px;flex:none;opacity:.75}
+.supportband{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:30px 0;border-top:1px solid var(--line-1);margin-top:8px}
+.supportband h3{font-size:20px;font-weight:500;letter-spacing:-.01em}
+.supportband p{color:var(--muted);font-size:14px;margin-top:6px;max-width:62ch}
+.supportband .cta{flex:none}
 .cta,.brand .label{white-space:nowrap}
 .cta-short{display:none}
-@media (max-width:420px){ .bar .cta-long{display:none} .bar .cta-short{display:inline} }
+@media (max-width:420px){ .bar .cta-long{display:none} .bar .cta-short{display:inline} .bar .cta{padding:11px 13px} .bar .cta .ext{display:none} }
+@media (max-width:640px){ .supportband{flex-direction:column;align-items:flex-start;gap:16px} }
 .cta:active{transform:scale(.98)}
 
 /* chapter ticks */
@@ -541,6 +549,7 @@ footer{padding:36px 0 44px;border-top:1px solid var(--line-1)}
       <span class="label">Frame Innovations</span>
     </a>
     <span class="spacer"></span>
+    <a class="cta alt" href="https://giving.adv.vt.edu/gift?fund=821173" target="_blank" rel="noopener">Support<svg class="ext" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 2.5h6v6M9.5 2.5l-7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     <a class="cta brk" href="#waitlist"><span class="cta-long">Join the waitlist</span><span class="cta-short">Waitlist</span></a>
   </div>
 </header>
@@ -564,6 +573,7 @@ footer{padding:36px 0 44px;border-top:1px solid var(--line-1)}
         </div>
         <div class="hero-ctas rise" style="--i:4">
           <a class="cta brk" href="#waitlist">Join the waitlist</a>
+          <a class="cta alt" href="https://giving.adv.vt.edu/gift?fund=821173" target="_blank" rel="noopener">Support us<svg class="ext" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 2.5h6v6M9.5 2.5l-7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
           <a class="ghost" href="#video" id="watchBtn"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16l13-8z" fill="currentColor"/></svg></i>Watch the video</a>
         </div>
         <div class="proof rise" style="--i:5">
@@ -816,13 +826,22 @@ footer{padding:36px 0 44px;border-top:1px solid var(--line-1)}
 
     </div>
   </section>
+
+  <section class="wrap" id="support">
+    <div class="inner">
+    <div class="supportband reveal">
+      <div class="sb-copy"><h3>Support the WorkCell</h3><p>The WorkCell is built by the Competitive Robotics Organization at Virginia Tech. Gifts go through Virginia Tech’s official giving site and help the team keep building.</p></div>
+      <a class="cta alt" href="https://giving.adv.vt.edu/gift?fund=821173" target="_blank" rel="noopener">Give through Virginia Tech<svg class="ext" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 2.5h6v6M9.5 2.5l-7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+    </div>
+  </section>
   <footer class="wrap">
     <div class="inner foot">
       <a class="brand" href="#hero" aria-label="Frame Innovations, back to top">
         <svg viewBox="0 0 512 512" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="34" stroke-linecap="round"><path d="M17 160V40q0-23 23-23h120"/><path d="M352 17h120q23 0 23 23v120"/><path d="M495 352v120q0 23-23 23H352"/><path d="M160 495H40q-23 0-23-23V352"/></g></svg>
         <span class="label">Frame Innovations</span>
       </a>
-      <nav class="flinks" aria-label="Footer"><a href="#why">Why</a><a href="#savings">Savings</a><a href="#specs">Specs</a><a href="#compare">Compare</a><a href="#tour">How it works</a><a href="#waitlist">Waitlist</a><a href="mailto:hello@frameinnovations.com">Contact</a></nav>
+      <nav class="flinks" aria-label="Footer"><a href="#why">Why</a><a href="#savings">Savings</a><a href="#specs">Specs</a><a href="#compare">Compare</a><a href="#tour">How it works</a><a href="#waitlist">Waitlist</a><a href="https://giving.adv.vt.edu/gift?fund=821173" target="_blank" rel="noopener">Support</a><a href="mailto:hello@frameinnovations.com">Contact</a></nav>
       <span class="fcopy">© 2026 Frame Innovations</span>
     </div>
   </footer>
