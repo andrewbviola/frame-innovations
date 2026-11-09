@@ -9,5 +9,8 @@
     "binding": "ASSETS",
     "run_worker_first": ["/api/*"]
   },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "waitlist", "database_id": "efc2208f-9725-45d3-8fa5-02c71e3bb172" }
+  ],
   "observability": { "enabled": true }
 }
